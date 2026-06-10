@@ -6,6 +6,29 @@
 	let dragCount = $state(0);
 	let files: FileList | null = $state(null);
 
+	async function uploadFile(file: File) {
+		const formData = new FormData();
+		formData.append('file', file);
+
+		try {
+			const response = await fetch('/api/upload', {
+				method: 'POST',
+				body: formData
+			});
+
+			const result = await response.json();
+
+			if (result.success) {
+				console.log('Backend says:', result.message);
+				console.log('Saved as:', result.filename);
+			} else {
+				console.error('Upload failed:', result.error);
+			}
+		} catch (error) {
+			console.error('Network error during upload:', error);
+		}
+	}
+
 	//handlers for drag and drop
 	function handleDragEnter(event: DragEvent) {
 		event.preventDefault();
@@ -31,19 +54,23 @@
 		//reset when dropped
 		dragCount = 0;
 		isDragging = false;
-		if (event.dataTransfer?.files) {
+		if (event.dataTransfer?.files && event.dataTransfer.files.length > 0) {
 			files = event.dataTransfer.files;
-			console.log('File dropped:', files[0].name);
-			//TODO send to backend
+			console.log('Uploading dropped file:', files[0].name);
+
+			//upload
+			uploadFile(files[0]);
 		}
 	}
 
 	function handleFileSelect(event: Event) {
 		const target = event.target as HTMLInputElement;
-		if (target.files) {
+		if (target.files && target.files.length > 0) {
 			files = target.files;
 			console.log('File selected:', files[0].name);
-			//TODO send to backend
+
+			//upload
+			uploadFile(files[0]);
 		}
 	}
 </script>
