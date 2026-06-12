@@ -1,41 +1,64 @@
 import { json } from '@sveltejs/kit';
 import fs from 'fs/promises';
 import path from 'path';
+import { env } from '$env/dynamic/private';
+import db from '$lib/server/db';
 
+function generateShortId() {
+	return Math.random().toString(36).substring(2, 8);
+}
 //handle post requests
 export async function POST({ request }) {
 	try {
-		//get the form data from the incoming request
 		const data = await request.formData();
-		const file = data.get('file') as File;
 
-		if (!file) {
-			return json({ error: 'No file provided' }, { status: 400 });
+		const chunk = data.get('chunk') as Blob;
+		const uploadId = data.get('uploadId') as string;
+		const originalName = data.get('filename') as string;
+		const chunkIndex = parseInt(data.get('chunkIndex') as string);
+		const totalChunks = parseInt(data.get('totalChunks') as string);
+		const totalSize = parseInt(data.get('totalSize') as string);
+
+		if (!chunk || !uploadId) {
+			return json({ error: 'missing chunk data' }, { status: 400 });
 		}
 
-		//convert the web File into a node.js buffer
-		const arrayBuffer = await file.arrayBuffer();
+		const arrayBuffer = await chunk.arrayBuffer();
 		const buffer = Buffer.from(arrayBuffer);
 
-		//temp upload dir
-		const uploadDir = path.resolve(process.cwd(), 'uploads');
+		const uploadDir = env.UPLOAD_DIR || path.resolve(process.cwd(), 'uploads');
 		await fs.mkdir(uploadDir, { recursive: true });
 
-		//strip weird file names avoid command injection
-		const safeFilename = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
-		const filePath = path.join(uploadDir, safeFilename);
+		//save chunks in part file
+		const tempFilePath = path.join(uploadDir, `${uploadId}.part`);
+		await fs.appendFile(tempFilePath, buffer);
 
-		//write file
-		await fs.writeFile(filePath, buffer);
+		//check if last chunk
+		if (chunkIndex === totalChunks - 1) {
+			const shortId = generateShortId();
+			const safeFilename = `${shortId}-${originalName.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+			const finalFilePath = path.join(uploadDir, safeFilename);
 
-		//send awk
-		return json({
-			success: true,
-			message: 'file uploaded successfully',
-			filename: safeFilename
-		});
+			await fs.rename(tempFilePath, finalFilePath);
+
+			const stmt = db.prepare(`
+					INSERT INTO files (id, original_name, disk_name, size)
+					VALUES (?, ?, ?, ?)
+				`);
+			stmt.run(shortId, originalName, safeFilename, totalSize);
+
+			//return share link
+			return json({
+				success: true,
+				message: 'Upload complete!',
+				url: `/f/${shortId}`,
+				finished: true
+			});
+		}
+		//else send the next chunk
+		return json({ success: true, finished: false });
 	} catch (err) {
-		console.error('backend upload error:', err);
-		return json({ error: 'Server error during upload' }, { status: 500 });
+		console.error('Chunk upload error:', err);
+		return json({ error: 'Internal server error during chunking' }, { status: 500 });
 	}
 }

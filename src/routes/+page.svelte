@@ -5,27 +5,57 @@
 	let isDragging = $state(false);
 	let dragCount = $state(0);
 	let files: FileList | null = $state(null);
+	let uploadProgress = $state(0);
+	let finalUrl = $state('');
 
 	async function uploadFile(file: File) {
-		const formData = new FormData();
-		formData.append('file', file);
+		//chunks will be 1MB
+		const CHUNK_SIZE = 1024 * 1024;
+		const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
 
-		try {
-			const response = await fetch('/api/upload', {
-				method: 'POST',
-				body: formData
-			});
+		const uploadId = Math.random().toString(36).substring(2) + Date.now().toString(36);
+		finalUrl = '';
+		uploadProgress = 0;
 
-			const result = await response.json();
+		for (let i = 0; i < totalChunks; i++) {
+			//calculate where to slice the file
+			const start = i * CHUNK_SIZE;
+			const end = Math.min(start + CHUNK_SIZE, file.size);
+			const chunk = file.slice(start, end);
 
-			if (result.success) {
-				console.log('Backend says:', result.message);
-				console.log('Saved as:', result.filename);
-			} else {
-				console.error('Upload failed:', result.error);
+			const formData = new FormData();
+			formData.append('chunk', chunk);
+			formData.append('uploadId', uploadId);
+			formData.append('filename', file.name);
+			formData.append('chunkIndex', i.toString());
+			formData.append('totalChunks', totalChunks.toString());
+			formData.append('totalSize', file.size.toString());
+
+			try {
+				const response = await fetch('/api/upload', {
+					method: 'POST',
+					body: formData
+				});
+
+				const result = await response.json();
+
+				if (!result.success) {
+					console.error('Upload failed on chunk', i, result.error);
+					alert('Upload failed!');
+					return;
+				}
+
+				//progress bar
+				uploadProgress = Math.round(((i + 1) / totalChunks) * 100);
+
+				if (result.finished) {
+					finalUrl = result.url;
+					console.log('Upload complete! Link:', finalUrl);
+				}
+			} catch (error) {
+				console.error('Network error on chunk', i, error);
+				return;
 			}
-		} catch (error) {
-			console.error('Network error during upload:', error);
 		}
 	}
 
@@ -98,8 +128,22 @@
 		</label>
 	</div>
 
-	{#if files && files.length > 0}
-		<p class="success-text">Selected: {files[0].name}</p>
+	{#if uploadProgress > 0 && uploadProgress < 100}
+		<div class="progress-container">
+			<p>Uploading... {uploadProgress}%</p>
+			<div class="progress-bar">
+				<div class="progress-fill" style="width: {uploadProgress}%"></div>
+			</div>
+		</div>
+	{/if}
+
+	{#if finalUrl}
+		<div class="success-box">
+			<p>Upload Complete!</p>
+			<a href={finalUrl} target="_blank" rel="external" class="share-link">
+				{finalUrl}
+			</a>
+		</div>
 	{/if}
 </main>
 
@@ -175,8 +219,44 @@
 		margin: 0;
 	}
 
-	.success-text {
+	.progress-container {
+		width: 100%;
+		max-width: 400px;
+		text-align: center;
+		color: var(--text-muted);
+	}
+
+	.progress-bar {
+		width: 100%;
+		height: 8px;
+		background-color: var(--border-color);
+		border-radius: 4px;
+		overflow: hidden;
+		margin-top: 0.5rem;
+	}
+
+	.progress-fill {
+		height: 100%;
+		background-color: var(--accent);
+		transition: width 0.2s linear;
+	}
+
+	.success-box {
+		text-align: center;
+		padding: 1rem 2rem;
+		border: 1px solid var(--accent);
+		border-radius: 8px;
+		background-color: rgba(212, 184, 114, 0.05);
+	}
+
+	.success-box p {
+		margin: 0 0 0.5rem 0;
+		color: var(--text-main);
+	}
+
+	.share-link {
 		color: var(--accent);
-		font-size: 0.9rem;
+		text-decoration: underline;
+		font-size: 1.2rem;
 	}
 </style>
