@@ -1,0 +1,10 @@
+services:
+  scrapbox:
+    build: .
+    restart: unless-stopped
+    ports:
+      - '3815:3815'
+    environment:
+      - UPLOAD_DIR=/data/uploads
+    volumes:
+      - ./uploads:/data/uploads
