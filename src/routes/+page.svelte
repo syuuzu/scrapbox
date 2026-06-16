@@ -1,6 +1,8 @@
 <script lang="ts">
-	//imports
-	import { CloudUpload } from 'lucide-svelte';
+	import { CloudUpload, Settings } from 'lucide-svelte';
+	import type { PageData } from './$types';
+
+	let { data }: { data: PageData } = $props();
 
 	let isDragging = $state(false);
 	let dragCount = $state(0);
@@ -106,6 +108,12 @@
 </script>
 
 <main class="container">
+	{#if data.isAdmin}
+		<a href="/settings" class="settings-link" title="Settings">
+			<Settings size={24} />
+		</a>
+	{/if}
+
 	<div class="logo-container">
 		<h1>scrapbox</h1>
 	</div>
@@ -124,7 +132,9 @@
 		<label for="file-upload" class="upload-content">
 			<CloudUpload size={64} strokeWidth={1.5} class="icon" />
 			<h2>click or drag to upload</h2>
-			<p class="subtitle">300 MB max per file</p>
+			<p class="subtitle">
+				{(parseInt(data.settings.max_upload_size) / (1024 * 1024)).toFixed(0)} MB max per file
+			</p>
 		</label>
 	</div>
 
@@ -156,6 +166,19 @@
 		width: 100%;
 		max-width: 600px;
 		padding: 2rem;
+		position: relative;
+	}
+
+	.settings-link {
+		position: absolute;
+		top: 1rem;
+		right: 1rem;
+		color: var(--text-muted);
+		transition: color 0.2s;
+	}
+
+	.settings-link:hover {
+		color: var(--accent);
 	}
 
 	.logo-container {
