@@ -1,4 +1,4 @@
-##what is scrapbox?
+## what is scrapbox?
 
 **scrapbox** is a free and open source simple file-hosting service that just works. It allows you to quickly upload anything and get back a shareable link for you to send to others. 
 
