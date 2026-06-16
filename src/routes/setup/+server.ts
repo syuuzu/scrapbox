@@ -26,7 +26,6 @@ export async function POST({ request, cookies, url }) {
 		//save to db
 		db.prepare("INSERT INTO settings (key, value) VALUES ('admin_hash', ?)").run(hash);
 
-		//site_domain might already exist as empty from db.ts, so we use UPDATE or INSERT
 		db.prepare('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)').run(
 			'site_domain',
 			domain

@@ -173,7 +173,7 @@
 						<div class="description-text">
 							<Clock size={16} /> file retention:
 							{#if isForever}
-								<span class="value-text">forever</span>
+								<span class="value">forever</span>
 							{:else}
 								{#if editingRetention}
 									<input
@@ -617,28 +617,29 @@
 		white-space: nowrap;
 	}
 
-	.value-text {
-		color: var(--text-muted);
-	}
-
 	.toggle-btn {
 		background: transparent;
-		border: none;
+		border: 1px solid var(--border-color);
+		border-radius: 6px;
 		color: var(--text-muted);
-		padding: 0.2rem 0.5rem;
-		font-size: 0.9rem;
+		padding: 0.25rem 0.75rem;
+		font-size: 0.85rem;
 		font-family: inherit;
 		cursor: pointer;
-		transition: color 0.2s;
+		transition: all 0.2s;
 		position: relative;
 	}
 
 	.toggle-btn:hover {
 		color: var(--text-main);
+		border-color: var(--text-muted);
 	}
 
 	.toggle-btn.active {
 		color: var(--accent);
+		border-color: var(--accent);
+		background-color: rgba(212, 184, 114, 0.05);
+		box-shadow: 0 0 10px rgba(212, 184, 114, 0.1);
 	}
 
 	.slider-row {
@@ -662,6 +663,20 @@
 		color: var(--text-muted);
 	}
 
+	.value {
+		background: transparent;
+		border: none;
+		color: var(--accent);
+		padding: 0.1rem 0.3rem;
+		border-radius: 4px;
+		cursor: pointer;
+		font-family: inherit;
+		font-size: inherit;
+		font-weight: bold;
+		min-width: 1rem;
+		text-align: center;
+		margin: 0 0.1rem;
+	}
 	.editable-value {
 		background: transparent;
 		border: 1px dashed var(--accent);
@@ -723,6 +738,12 @@
 	select:focus {
 		outline: none;
 		border-color: var(--accent);
+	}
+
+	select option {
+		background-color: var(--bg-color);
+		color: var(--text-main);
+		padding: 0.5rem;
 	}
 
 	.slider {
