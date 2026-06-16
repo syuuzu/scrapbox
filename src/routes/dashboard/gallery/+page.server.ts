@@ -56,33 +56,34 @@ export const load: PageServerLoad = async () => {
 };
 
 export const actions: Actions = {
-	deleteFile: async ({ request }) => {
+	deleteFiles: async ({ request }) => {
 		const data = await request.formData();
-		const id = data.get('id')?.toString();
+		const idsString = data.get('ids')?.toString();
 
-		if (!id) {
-			return fail(400, { error: 'Missing file ID' });
+		if (!idsString) {
+			return fail(400, { error: 'Missing file IDs' });
 		}
 
-		const file = db.prepare('SELECT disk_name FROM files WHERE id = ?').get(id) as
-			| { disk_name: string }
-			| undefined;
-
-		if (!file) {
-			return fail(404, { error: 'File not found' });
-		}
+		const ids = idsString.split(',');
+		const uploadDir = env.UPLOAD_DIR || path.resolve(process.cwd(), 'uploads');
 
 		try {
-			const uploadDir = env.UPLOAD_DIR || path.resolve(process.cwd(), 'uploads');
-			const filePath = path.join(uploadDir, file.disk_name);
+			for (const id of ids) {
+				const file = db.prepare('SELECT disk_name FROM files WHERE id = ?').get(id) as
+					| { disk_name: string }
+					| undefined;
 
-			//delete from disk
-			await fs.unlink(filePath).catch((err) => {
-				console.error(`Failed to delete file from disk: ${filePath}`, err);
-			});
+				if (file) {
+					const filePath = path.join(uploadDir, file.disk_name);
+					//delete from disk
+					await fs.unlink(filePath).catch((err) => {
+						console.error(`Failed to delete file from disk: ${filePath}`, err);
+					});
 
-			//delete from database
-			db.prepare('DELETE FROM files WHERE id = ?').run(id);
+					//delete from database
+					db.prepare('DELETE FROM files WHERE id = ?').run(id);
+				}
+			}
 
 			return { success: true };
 		} catch (err) {

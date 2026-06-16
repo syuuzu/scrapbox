@@ -15,7 +15,17 @@
 
 	let { data }: { data: PageData } = $props();
 
+	let selectedIds = $state<string[]>([]);
 	let copiedId = $state('');
+
+	function toggleSelect(id: string, event: MouseEvent) {
+		event.stopPropagation();
+		if (selectedIds.includes(id)) {
+			selectedIds = selectedIds.filter((i) => i !== id);
+		} else {
+			selectedIds = [...selectedIds, id];
+		}
+	}
 
 	async function copyLink(id: string) {
 		const url = getFileUrl(id);
@@ -76,6 +86,31 @@
 	<div class="header-container">
 		<div class="top-row">
 			<a href="/dashboard/settings" class="back-link"><ArrowLeft size={16} /> back to settings</a>
+			{#if selectedIds.length > 0}
+				<form
+					method="POST"
+					action="?/deleteFiles"
+					use:enhance={() => {
+						return async ({ result, update }) => {
+							if (result.type === 'success') {
+								selectedIds = [];
+								await update();
+							}
+						};
+					}}
+				>
+					<input type="hidden" name="ids" value={selectedIds.join(',')} />
+					<button
+						type="submit"
+						class="bulk-delete-btn"
+						onclick={(e) =>
+							!confirm(`Are you sure you want to delete ${selectedIds.length} files?`) &&
+							e.preventDefault()}
+					>
+						<Trash2 size={16} /> delete selected ({selectedIds.length})
+					</button>
+				</form>
+			{/if}
 		</div>
 		<h1><Image size={32} /> upload gallery</h1>
 		<p class="stats">
@@ -125,10 +160,25 @@
 			<p>no files uploaded yet</p>
 		</div>
 	{:else}
-		<div class="gallery-grid">
+		<div class="gallery-grid {selectedIds.length > 0 ? 'selection-mode' : ''}">
 			{#each data.files as file (file.id)}
-				<div class="file-card">
-					<a href={getFileUrl(file.id)} target="_blank" class="card-link">
+				<div class="file-card {selectedIds.includes(file.id) ? 'selected' : ''}">
+					<button
+						class="select-circle {selectedIds.includes(file.id) ? 'active' : ''}"
+						onclick={(e) => toggleSelect(file.id, e)}
+						aria-label="Select file"
+					></button>
+					<a
+						href={getFileUrl(file.id)}
+						target="_blank"
+						class="card-link"
+						onclick={(e) => {
+							if (selectedIds.length > 0) {
+								e.preventDefault();
+								toggleSelect(file.id, e);
+							}
+						}}
+					>
 						<div class="preview">
 							{#if isImage(file.original_name)}
 								<img src="/{file.id}" alt={file.original_name} loading="lazy" />
@@ -165,7 +215,7 @@
 						</button>
 						<form
 							method="POST"
-							action="?/deleteFile"
+							action="?/deleteFiles"
 							use:enhance={() => {
 								return async ({ result, update }) => {
 									if (result.type === 'success') {
@@ -174,7 +224,7 @@
 								};
 							}}
 						>
-							<input type="hidden" name="id" value={file.id} />
+							<input type="hidden" name="ids" value={file.id} />
 							<button
 								type="submit"
 								class="action-btn delete-btn"
@@ -210,6 +260,7 @@
 
 	.top-row {
 		display: flex;
+		justify-content: space-between;
 		align-items: center;
 		margin-bottom: 0.5rem;
 	}
@@ -225,6 +276,25 @@
 
 	.back-link:hover {
 		color: var(--accent);
+	}
+
+	.bulk-delete-btn {
+		background-color: #ff4757;
+		color: #fff;
+		border: none;
+		border-radius: 6px;
+		padding: 0.4rem 0.8rem;
+		font-size: 0.9rem;
+		font-weight: 600;
+		cursor: pointer;
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		transition: opacity 0.2s;
+	}
+
+	.bulk-delete-btn:hover {
+		opacity: 0.9;
 	}
 
 	h1 {
@@ -329,6 +399,10 @@
 		gap: 1.5rem;
 	}
 
+	.gallery-grid.selection-mode .card-link {
+		cursor: pointer;
+	}
+
 	.file-card {
 		background-color: rgba(255, 255, 255, 0.03);
 		border: 1px solid var(--border-color);
@@ -336,6 +410,7 @@
 		overflow: hidden;
 		display: flex;
 		flex-direction: column;
+		position: relative;
 		transition:
 			transform 0.2s,
 			border-color 0.2s;
@@ -344,6 +419,47 @@
 	.file-card:hover {
 		transform: translateY(-4px);
 		border-color: var(--accent);
+	}
+
+	.file-card.selected {
+		border-color: var(--accent);
+		background-color: rgba(212, 184, 114, 0.05);
+	}
+
+	.select-circle {
+		position: absolute;
+		top: 10px;
+		right: 10px;
+		width: 20px;
+		height: 20px;
+		border: 2px solid var(--border-color);
+		border-radius: 50%;
+		background-color: rgba(0, 0, 0, 0.3);
+		cursor: pointer;
+		z-index: 10;
+		transition: all 0.2s;
+		padding: 0;
+	}
+
+	.select-circle:hover {
+		border-color: var(--accent);
+	}
+
+	.select-circle.active {
+		background-color: var(--accent);
+		border-color: var(--accent);
+	}
+
+	.select-circle.active::after {
+		content: '';
+		position: absolute;
+		top: 50%;
+		left: 50%;
+		width: 10px;
+		height: 10px;
+		background-color: #000;
+		border-radius: 50%;
+		transform: translate(-50%, -50%);
 	}
 
 	.card-link {
