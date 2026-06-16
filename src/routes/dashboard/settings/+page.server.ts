@@ -27,7 +27,7 @@ export const actions: Actions = {
 		const data = await request.formData();
 		const retention = data.get('retention_policy');
 		const maxSize = data.get('max_upload_size');
-		const allowedTypes = data.get('allowed_file_types');
+		const bannedTypes = data.get('banned_file_types');
 		const theme = data.get('theme');
 		const rateLimitWindow = data.get('rate_limit_window');
 		const rateLimitMax = data.get('rate_limit_max');
@@ -38,7 +38,7 @@ export const actions: Actions = {
 
 		if (retention !== null) updateSetting.run(retention.toString(), 'retention_policy');
 		if (maxSize !== null) updateSetting.run(maxSize.toString(), 'max_upload_size');
-		if (allowedTypes !== null) updateSetting.run(allowedTypes.toString(), 'allowed_file_types');
+		if (bannedTypes !== null) updateSetting.run(bannedTypes.toString(), 'banned_file_types');
 		if (theme !== null) updateSetting.run(theme.toString(), 'theme');
 		if (rateLimitWindow !== null)
 			updateSetting.run(rateLimitWindow.toString(), 'rate_limit_window');

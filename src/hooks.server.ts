@@ -111,7 +111,7 @@ export const handle = async ({ event, resolve }) => {
 
 	const path = event.url.pathname;
 	const isSetupRoute = path.startsWith('/setup');
-	const isAdminRoute = path.startsWith('/admin') || path.startsWith('/settings');
+	const isAdminRoute = path.startsWith('/dashboard');
 
 	//if no password is in the database stop the app from working
 	if (!isSetupComplete && !isSetupRoute) {
@@ -124,7 +124,7 @@ export const handle = async ({ event, resolve }) => {
 	}
 
 	//if they are trying to login as admin check their cookie
-	if (isAdminRoute && path !== '/admin/login' && path !== '/admin/setup' && path !== '/login') {
+	if (isAdminRoute && path !== '/login') {
 		const sessionCookie = event.cookies.get('admin_session');
 
 		//stop them if they dont have a cookie
@@ -134,7 +134,7 @@ export const handle = async ({ event, resolve }) => {
 	}
 
 	if (path === '/login' && event.cookies.get('admin_session') === 'authenticated') {
-		throw redirect(302, '/settings');
+		throw redirect(302, '/dashboard/settings');
 	}
 
 	//if they pass all tests

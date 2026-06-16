@@ -36,13 +36,16 @@ db.exec(`
 const defaultSettings = [
 	{ key: 'retention_policy', value: '0' },
 	{ key: 'max_upload_size', value: '52428800' },
-	{ key: 'allowed_file_types', value: '*' },
+	{ key: 'banned_file_types', value: '' },
 	{ key: 'theme', value: 'default' },
 	{ key: 'rate_limit_window', value: '1000' },
 	{ key: 'rate_limit_max', value: '100' },
 	{ key: 'short_id_length', value: '8' },
 	{ key: 'site_domain', value: '' }
 ];
+
+//migration: allowed_file_types -> banned_file_types
+db.prepare("UPDATE settings SET key = 'banned_file_types' WHERE key = 'allowed_file_types'").run();
 
 //load settings
 const insertSetting = db.prepare('INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)');

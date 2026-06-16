@@ -21,7 +21,7 @@
 
 			if (result.success) {
 				await invalidateAll();
-				await goto('/settings');
+				await goto('/dashboard/settings');
 				return;
 			} else {
 				error = result.error || 'Invalid password';

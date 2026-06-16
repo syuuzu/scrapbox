@@ -49,14 +49,23 @@ export async function POST({ request }) {
 			);
 		}
 
-		const allowedTypes = settingsMap['allowed_file_types'];
-		if (allowedTypes !== '*') {
-			const extensions = allowedTypes
+		const bannedTypes = settingsMap['banned_file_types'] || '';
+		if (bannedTypes.trim() !== '') {
+			const extensions = bannedTypes
 				.split(',')
 				.map((ext) => ext.trim().toLowerCase().replace(/^\./, ''));
 			const fileExt = path.extname(originalName).toLowerCase().replace(/^\./, '');
-			if (!extensions.includes(fileExt)) {
-				return json({ error: `File type .${fileExt} not allowed` }, { status: 400 });
+
+			const isBanned = extensions.some((ext) => {
+				if (ext === 'none' && fileExt === '') return true;
+				return ext === fileExt;
+			});
+
+			if (isBanned) {
+				return json(
+					{ error: `File type ${fileExt ? '.' + fileExt : 'with no extension'} is banned` },
+					{ status: 400 }
+				);
 			}
 		}
 
@@ -87,7 +96,7 @@ export async function POST({ request }) {
 
 			//generate full url if site_domain is set
 			const domain = settingsMap['site_domain']?.replace(/\/$/, '') || '';
-			const shareUrl = domain ? `${domain}/f/${shortId}` : `/f/${shortId}`;
+			const shareUrl = domain ? `${domain}/${shortId}` : `/${shortId}`;
 
 			//return share link
 			return json({

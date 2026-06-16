@@ -15,7 +15,8 @@
 		ChevronUp,
 		ShieldAlert,
 		LogOut,
-		Globe
+		Globe,
+		Image
 	} from 'lucide-svelte';
 	import { enhance } from '$app/forms';
 	import { tick } from 'svelte';
@@ -24,7 +25,7 @@
 
 	let { data }: { data: PageData } = $props();
 
-	let allowedTypes = $state('');
+	let bannedTypes = $state('');
 	let theme = $state('default');
 	let isForever = $state(false);
 	let retentionUnit = $state('days');
@@ -58,7 +59,7 @@
 	};
 
 	$effect(() => {
-		allowedTypes = data.settings.allowed_file_types;
+		bannedTypes = data.settings.banned_file_types || '';
 		theme = data.settings.theme;
 
 		const rawRetention = parseInt(data.settings.retention_policy);
@@ -144,9 +145,14 @@
 	<div class="header-container">
 		<div class="top-row">
 			<a href="/" class="back-link">← back to upload</a>
-			<button class="logout-btn" onclick={handleLogout}>
-				<LogOut size={16} /> logout
-			</button>
+			<div class="top-actions">
+				<a href="/dashboard/gallery" class="gallery-btn">
+					<Image size={16} /> view gallery
+				</a>
+				<button class="logout-btn" onclick={handleLogout}>
+					<LogOut size={16} /> logout
+				</button>
+			</div>
 		</div>
 		<h1><Settings size={32} /> settings</h1>
 	</div>
@@ -270,18 +276,20 @@
 				</div>
 
 				<div class="input-group">
-					<label for="allowed_file_types">
-						<FileType size={16} /> allowed file types
+					<label for="banned_file_types">
+						<FileType size={16} /> banned file types
 					</label>
 					<input
 						type="text"
-						name="allowed_file_types"
-						id="allowed_file_types"
-						bind:value={allowedTypes}
-						placeholder="*, .jpg, .png, .pdf"
+						name="banned_file_types"
+						id="banned_file_types"
+						bind:value={bannedTypes}
+						placeholder=".exe, .msi, none"
 						autocomplete="off"
 					/>
-					<p class="hint">use * for all, or comma-separated extensions</p>
+					<p class="hint">
+						comma-separated extensions to block. use 'none' to block files with no extension.
+					</p>
 				</div>
 
 				<div class="input-group">
@@ -472,6 +480,33 @@
 		justify-content: space-between;
 		align-items: center;
 		width: 100%;
+	}
+
+	.top-actions {
+		display: flex;
+		gap: 0.75rem;
+		align-items: center;
+	}
+
+	.gallery-btn {
+		background-color: rgba(255, 255, 255, 0.05);
+		border: 1px solid var(--border-color);
+		color: var(--text-main);
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		padding: 0.4rem 0.8rem;
+		border-radius: 6px;
+		cursor: pointer;
+		font-size: 0.9rem;
+		text-decoration: none;
+		transition: all 0.2s;
+	}
+
+	.gallery-btn:hover {
+		border-color: var(--accent);
+		color: var(--accent);
+		background-color: rgba(212, 184, 114, 0.05);
 	}
 
 	.logout-btn {

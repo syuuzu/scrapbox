@@ -151,7 +151,7 @@
 
 <main class="container">
 	{#if data.isAdmin}
-		<a href="/settings" class="settings-link" title="Settings">
+		<a href="/dashboard/settings" class="settings-link" title="Settings">
 			<Settings size={24} />
 		</a>
 	{/if}
