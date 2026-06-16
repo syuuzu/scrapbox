@@ -1,9 +1,10 @@
 <script lang="ts">
-	import { ShieldCheck, Lock, AlertCircle } from 'lucide-svelte';
+	import { ShieldCheck, Lock, AlertCircle, Globe } from 'lucide-svelte';
 	import { goto, invalidateAll } from '$app/navigation';
 
 	let password = $state('');
 	let confirmPassword = $state('');
+	let domain = $state('');
 	let error = $state('');
 	let loading = $state(false);
 
@@ -20,12 +21,17 @@
 			return;
 		}
 
+		if (!domain) {
+			error = 'Please enter your site domain';
+			return;
+		}
+
 		loading = true;
 		try {
 			const response = await fetch('/setup', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ password })
+				body: JSON.stringify({ password, domain })
 			});
 
 			const result = await response.json();
@@ -64,6 +70,23 @@
 				handleSetup();
 			}}
 		>
+			<div class="input-group">
+				<label for="domain">site domain</label>
+				<div class="input-wrapper">
+					<div class="icon-container">
+						<Globe size={18} />
+					</div>
+					<input
+						type="text"
+						id="domain"
+						bind:value={domain}
+						placeholder="https://share.example.com"
+						required
+					/>
+				</div>
+				<p class="hint">used for share links</p>
+			</div>
+
 			<div class="input-group">
 				<label for="password">admin password</label>
 				<div class="input-wrapper">
@@ -104,7 +127,7 @@
 			{/if}
 
 			<button type="submit" disabled={loading}>
-				{loading ? 'Setting up...' : 'Complete Setup'}
+				{loading ? 'setting up...' : 'setup done'}
 			</button>
 		</form>
 	</div>
@@ -126,6 +149,13 @@
 
 	.logo-container {
 		text-align: center;
+	}
+
+	.hint {
+		color: var(--accent);
+		font-size: 0.9rem;
+		margin: 0.5rem 0 0 0;
+		letter-spacing: 1px;
 	}
 
 	.logo-container h1 {

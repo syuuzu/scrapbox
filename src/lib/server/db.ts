@@ -40,7 +40,8 @@ const defaultSettings = [
 	{ key: 'theme', value: 'default' },
 	{ key: 'rate_limit_window', value: '1000' },
 	{ key: 'rate_limit_max', value: '100' },
-	{ key: 'short_id_length', value: '8' }
+	{ key: 'short_id_length', value: '8' },
+	{ key: 'site_domain', value: '' }
 ];
 
 //load settings

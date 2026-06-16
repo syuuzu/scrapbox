@@ -14,7 +14,8 @@
 		ChevronDown,
 		ChevronUp,
 		ShieldAlert,
-		LogOut
+		LogOut,
+		Globe
 	} from 'lucide-svelte';
 	import { enhance } from '$app/forms';
 	import { tick } from 'svelte';
@@ -33,6 +34,7 @@
 	let rateLimitWindow = $state(1000);
 	let rateLimitMax = $state(100);
 	let shortIdLength = $state(8);
+	let siteDomain = $state('');
 
 	let showAdvanced = $state(false);
 
@@ -91,6 +93,7 @@
 		rateLimitWindow = parseInt(data.settings.rate_limit_window || '1000');
 		rateLimitMax = parseInt(data.settings.rate_limit_max || '100');
 		shortIdLength = parseInt(data.settings.short_id_length || '8');
+		siteDomain = data.settings.site_domain || '';
 	});
 
 	let editingRetention = $state(false);
@@ -279,6 +282,20 @@
 						autocomplete="off"
 					/>
 					<p class="hint">use * for all, or comma-separated extensions</p>
+				</div>
+
+				<div class="input-group">
+					<label for="site_domain">
+						<Globe size={16} /> site domain
+					</label>
+					<input
+						type="text"
+						name="site_domain"
+						id="site_domain"
+						bind:value={siteDomain}
+						placeholder="https://example.com"
+					/>
+					<p class="hint">used to generate file sharing links</p>
 				</div>
 
 				<div class="input-group">

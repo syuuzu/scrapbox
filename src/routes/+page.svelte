@@ -20,6 +20,17 @@
 	let files: FileList | null = $state(null);
 	let uploadProgress = $state(0);
 	let finalUrl = $state('');
+	let copied = $state(false);
+
+	async function copyToClipboard() {
+		try {
+			await navigator.clipboard.writeText(finalUrl);
+			copied = true;
+			setTimeout(() => (copied = false), 2000);
+		} catch (err) {
+			console.error('Failed to copy: ', err);
+		}
+	}
 
 	async function uploadFile(file: File) {
 		//chunks will be 1MB
@@ -31,7 +42,6 @@
 		uploadProgress = 0;
 
 		for (let i = 0; i < totalChunks; i++) {
-			//calculate where to slice the file
 			const start = i * CHUNK_SIZE;
 			const end = Math.min(start + CHUNK_SIZE, file.size);
 			const chunk = file.slice(start, end);
@@ -44,30 +54,51 @@
 			formData.append('totalChunks', totalChunks.toString());
 			formData.append('totalSize', file.size.toString());
 
-			try {
-				const response = await fetch('/api/upload', {
-					method: 'POST',
-					body: formData
-				});
+			let retries = 3;
+			let success = false;
 
-				const result = await response.json();
+			while (retries > 0 && !success) {
+				try {
+					const response = await fetch('/api/upload', {
+						method: 'POST',
+						body: formData
+					});
 
-				if (!result.success) {
-					console.error('Upload failed on chunk', i, result.error);
-					alert('Upload failed!');
-					return;
+					if (response.status === 429) {
+						//handle rate limit
+						const retryAfter = parseInt(response.headers.get('Retry-After') || '1');
+						await new Promise((resolve) => setTimeout(resolve, retryAfter * 1000));
+						continue; //retry without decrementing retries for rate limits
+					}
+
+					if (!response.ok) {
+						throw new Error(`HTTP error! status: ${response.status}`);
+					}
+
+					const result = await response.json();
+
+					if (!result.success) {
+						console.error('Upload failed on chunk', i, result.error);
+						alert(`Upload failed: ${result.error}`);
+						return;
+					}
+
+					success = true;
+					uploadProgress = Math.round(((i + 1) / totalChunks) * 100);
+
+					if (result.finished) {
+						finalUrl = result.url;
+					}
+				} catch (error) {
+					console.error(`Error on chunk ${i}, attempts remaining: ${retries - 1}`, error);
+					retries--;
+					if (retries === 0) {
+						alert('Upload failed after multiple attempts. Please check your connection.');
+						return;
+					}
+					//exponential backoff
+					await new Promise((resolve) => setTimeout(resolve, (3 - retries) * 1000));
 				}
-
-				//progress bar
-				uploadProgress = Math.round(((i + 1) / totalChunks) * 100);
-
-				if (result.finished) {
-					finalUrl = result.url;
-					console.log('Upload complete! Link:', finalUrl);
-				}
-			} catch (error) {
-				console.error('Network error on chunk', i, error);
-				return;
 			}
 		}
 	}
@@ -160,10 +191,12 @@
 
 	{#if finalUrl}
 		<div class="success-box">
-			<p>Upload Complete!</p>
-			<a href={finalUrl} target="_blank" rel="external" class="share-link">
-				{finalUrl}
-			</a>
+			<button class="copy-button" onclick={copyToClipboard} type="button">
+				<p>{copied ? 'copied!' : 'upload complete!'}</p>
+				<span class="share-link">
+					{finalUrl}
+				</span>
+			</button>
 		</div>
 	{/if}
 </main>
@@ -277,20 +310,38 @@
 
 	.success-box {
 		text-align: center;
-		padding: 1rem 2rem;
+		width: 100%;
 		border: 1px solid var(--accent);
 		border-radius: 8px;
 		background-color: rgba(212, 184, 114, 0.05);
+		overflow: hidden;
 	}
 
-	.success-box p {
+	.copy-button {
+		width: 100%;
+		background: transparent;
+		border: none;
+		padding: 1.5rem 2rem;
+		cursor: pointer;
+		font-family: inherit;
+		color: inherit;
+		transition: background-color 0.2s;
+	}
+
+	.copy-button:hover {
+		background-color: rgba(212, 184, 114, 0.1);
+	}
+
+	.copy-button p {
 		margin: 0 0 0.5rem 0;
 		color: var(--text-main);
+		font-size: 0.9rem;
 	}
 
 	.share-link {
 		color: var(--accent);
 		text-decoration: underline;
 		font-size: 1.2rem;
+		word-break: break-all;
 	}
 </style>

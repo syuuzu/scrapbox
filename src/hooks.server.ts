@@ -4,40 +4,52 @@ import fs from 'fs/promises';
 import path from 'path';
 import { env } from '$env/dynamic/private';
 
-//removes old files
+//removes old files and abandoned chunks
 async function cleanupFiles() {
 	try {
+		const uploadDir = env.UPLOAD_DIR || path.resolve(process.cwd(), 'uploads');
+		//expired files
 		const settings = db
 			.prepare('SELECT value FROM settings WHERE key = ?')
 			.get('retention_policy') as { value: string } | undefined;
 		const retention = settings ? parseInt(settings.value) : 0;
 
-		if (retention === 0) return;
+		if (retention !== 0) {
+			const oldFiles = db
+				.prepare(
+					`
+				SELECT id, disk_name FROM files
+				WHERE created_at < datetime('now', '-' || ? || ' minutes')
+			`
+				)
+				.all(retention) as { id: string; disk_name: string }[];
 
-		const oldFiles = db
-			.prepare(
-				`
-			SELECT id, disk_name FROM files
-			WHERE created_at < datetime('now', '-' || ? || ' minutes')
-		`
-			)
-			.all(retention) as { id: string; disk_name: string }[];
-
-		if (oldFiles.length === 0) return;
-
-		const uploadDir = env.UPLOAD_DIR || path.resolve(process.cwd(), 'uploads');
-
-		for (const file of oldFiles) {
-			const filePath = path.join(uploadDir, file.disk_name);
-			try {
-				await fs.unlink(filePath);
-				db.prepare('DELETE FROM files WHERE id = ?').run(file.id);
-				console.log(`[Cleanup] Deleted expired file: ${file.disk_name}`);
-			} catch (err) {
-				console.error(`[Cleanup] Failed to delete file ${file.disk_name}:`, err);
-				//delete from db if file is missing
-				if (err instanceof Error && 'code' in err && err.code === 'ENOENT') {
+			for (const file of oldFiles) {
+				const filePath = path.join(uploadDir, file.disk_name);
+				try {
+					await fs.unlink(filePath);
 					db.prepare('DELETE FROM files WHERE id = ?').run(file.id);
+					console.log(`[Cleanup] Deleted expired file: ${file.disk_name}`);
+				} catch (err) {
+					if (err instanceof Error && 'code' in err && err.code === 'ENOENT') {
+						db.prepare('DELETE FROM files WHERE id = ?').run(file.id);
+					}
+				}
+			}
+		}
+
+		//clean up old part files
+		const files = await fs.readdir(uploadDir).catch(() => []);
+		const now = Date.now();
+
+		for (const file of files) {
+			if (file.endsWith('.part')) {
+				const filePath = path.join(uploadDir, file);
+				const stats = await fs.stat(filePath);
+				//uploads longer than 24 hours get deleted
+				if (now - stats.mtimeMs > 24 * 60 * 60 * 1000) {
+					await fs.unlink(filePath);
+					console.log(`[Cleanup] Deleted abandoned partial upload: ${file}`);
 				}
 			}
 		}
@@ -78,9 +90,10 @@ export const handle = async ({ event, resolve }) => {
 	if (userLimit && now < userLimit.reset) {
 		userLimit.count++;
 		if (userLimit.count > maxRequests) {
-			return new Response('Too many requests', {
+			return new Response(JSON.stringify({ error: 'Too many requests' }), {
 				status: 429,
 				headers: {
+					'Content-Type': 'application/json',
 					'Retry-After': Math.ceil((userLimit.reset - now) / 1000).toString()
 				}
 			});
@@ -89,7 +102,7 @@ export const handle = async ({ event, resolve }) => {
 		rateLimits.set(clientIp, { count: 1, reset: now + windowMs });
 	}
 
-	//cleanup rateLimits map occasionally (simple approach)
+	//cleanup rateLimits map occasionally
 	if (rateLimits.size > 10000) {
 		for (const [ip, limit] of rateLimits.entries()) {
 			if (now > limit.reset) rateLimits.delete(ip);

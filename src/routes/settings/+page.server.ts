@@ -32,6 +32,7 @@ export const actions: Actions = {
 		const rateLimitWindow = data.get('rate_limit_window');
 		const rateLimitMax = data.get('rate_limit_max');
 		const shortIdLength = data.get('short_id_length');
+		const siteDomain = data.get('site_domain');
 
 		const updateSetting = db.prepare('UPDATE settings SET value = ? WHERE key = ?');
 
@@ -43,6 +44,7 @@ export const actions: Actions = {
 			updateSetting.run(rateLimitWindow.toString(), 'rate_limit_window');
 		if (rateLimitMax !== null) updateSetting.run(rateLimitMax.toString(), 'rate_limit_max');
 		if (shortIdLength !== null) updateSetting.run(shortIdLength.toString(), 'short_id_length');
+		if (siteDomain !== null) updateSetting.run(siteDomain.toString(), 'site_domain');
 
 		return { success: true };
 	},

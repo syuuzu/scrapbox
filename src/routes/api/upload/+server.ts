@@ -85,11 +85,15 @@ export async function POST({ request }) {
 				`);
 			stmt.run(shortId, originalName, safeFilename, totalSize);
 
+			//generate full url if site_domain is set
+			const domain = settingsMap['site_domain']?.replace(/\/$/, '') || '';
+			const shareUrl = domain ? `${domain}/f/${shortId}` : `/f/${shortId}`;
+
 			//return share link
 			return json({
 				success: true,
 				message: 'Upload complete!',
-				url: `/f/${shortId}`,
+				url: shareUrl,
 				finished: true
 			});
 		}

@@ -4,10 +4,14 @@ import db from '$lib/server/db';
 
 export async function POST({ request, cookies, url }) {
 	try {
-		const { password } = await request.json();
+		const { password, domain } = await request.json();
 
 		if (!password || password.length < 8) {
 			return json({ error: 'Password must be at least 8 characters long' }, { status: 400 });
+		}
+
+		if (!domain) {
+			return json({ error: 'Domain name is required' }, { status: 400 });
 		}
 
 		//check if setup is already complete
@@ -21,6 +25,12 @@ export async function POST({ request, cookies, url }) {
 
 		//save to db
 		db.prepare("INSERT INTO settings (key, value) VALUES ('admin_hash', ?)").run(hash);
+
+		//site_domain might already exist as empty from db.ts, so we use UPDATE or INSERT
+		db.prepare('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)').run(
+			'site_domain',
+			domain
+		);
 
 		const isSecure = url.protocol === 'https:';
 
