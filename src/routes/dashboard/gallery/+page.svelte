@@ -1,9 +1,39 @@
 <script lang="ts">
-	import { Image, File, Trash2, ExternalLink, HardDrive, Calendar, ArrowLeft } from 'lucide-svelte';
+	import {
+		Image,
+		File,
+		Trash2,
+		Copy,
+		Check,
+		HardDrive,
+		Calendar,
+		ArrowLeft,
+		Clock
+	} from 'lucide-svelte';
 	import { enhance } from '$app/forms';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
+
+	let copiedId = $state('');
+
+	async function copyLink(id: string) {
+		const url = getFileUrl(id);
+		try {
+			//if domain is relative make it absolute for clipboard
+			const absoluteUrl = url.startsWith('http')
+				? url
+				: window.location.origin + (url.startsWith('/') ? '' : '/') + url;
+
+			await navigator.clipboard.writeText(absoluteUrl);
+			copiedId = id;
+			setTimeout(() => {
+				if (copiedId === id) copiedId = '';
+			}, 2000);
+		} catch (err) {
+			console.error('Failed to copy link:', err);
+		}
+	}
 
 	function formatSize(bytes: number) {
 		if (bytes === 0) return '0 B';
@@ -21,6 +51,25 @@
 		const domain = data.siteDomain.replace(/\/$/, '') || '';
 		return domain ? `${domain}/${id}` : `/${id}`;
 	}
+
+	function getTimeLeft(createdAt: string) {
+		if (data.retentionPolicy === 0) return 'forever';
+
+		const created = new Date(createdAt).getTime();
+		const expires = created + data.retentionPolicy * 60 * 1000;
+		const now = Date.now();
+		const diff = expires - now;
+
+		if (diff <= 0) return 'expired';
+
+		const minutes = Math.floor(diff / (1000 * 60));
+		const hours = Math.floor(minutes / 60);
+		const days = Math.floor(hours / 24);
+
+		if (days > 0) return `${days}d left`;
+		if (hours > 0) return `${hours}h left`;
+		return `${minutes}m left`;
+	}
 </script>
 
 <main class="container">
@@ -34,6 +83,42 @@
 		</p>
 	</div>
 
+	<div class="storage-container">
+		<div class="storage-info">
+			<div class="storage-item">
+				<div class="dot uploads"></div>
+				<span>uploads: {formatSize(data.storageStats.totalUploadsSize)}</span>
+			</div>
+			<div class="storage-item">
+				<div class="dot free"></div>
+				<span>free space: {formatSize(data.storageStats.diskFree)}</span>
+			</div>
+			<div class="storage-item total">
+				<span>total disk: {formatSize(data.storageStats.diskTotal)}</span>
+			</div>
+		</div>
+		<div class="storage-bar-wrapper">
+			<div
+				class="storage-segment uploads"
+				style="width: {(data.storageStats.totalUploadsSize / data.storageStats.diskTotal) * 100}%"
+				title="Uploads: {formatSize(data.storageStats.totalUploadsSize)}"
+			></div>
+			<div
+				class="storage-segment other"
+				style="width: {((data.storageStats.diskTotal -
+					data.storageStats.diskFree -
+					data.storageStats.totalUploadsSize) /
+					data.storageStats.diskTotal) *
+					100}%"
+				title="Other: {formatSize(
+					data.storageStats.diskTotal -
+						data.storageStats.diskFree -
+						data.storageStats.totalUploadsSize
+				)}"
+			></div>
+		</div>
+	</div>
+
 	{#if data.files.length === 0}
 		<div class="empty-state">
 			<File size={48} />
@@ -43,34 +128,41 @@
 		<div class="gallery-grid">
 			{#each data.files as file (file.id)}
 				<div class="file-card">
-					<div class="preview">
-						{#if isImage(file.original_name)}
-							<img src="/{file.id}" alt={file.original_name} loading="lazy" />
-						{:else}
-							<div class="file-icon">
-								<File size={48} />
-								<span class="ext">{file.original_name.split('.').pop()}</span>
-							</div>
-						{/if}
-					</div>
-
-					<div class="info">
-						<h3 title={file.original_name}>{file.original_name}</h3>
-						<div class="meta">
-							<span><HardDrive size={12} /> {formatSize(file.size)}</span>
-							<span><Calendar size={12} /> {new Date(file.created_at).toLocaleDateString()}</span>
+					<a href={getFileUrl(file.id)} target="_blank" class="card-link">
+						<div class="preview">
+							{#if isImage(file.original_name)}
+								<img src="/{file.id}" alt={file.original_name} loading="lazy" />
+							{:else}
+								<div class="file-icon">
+									<File size={48} />
+									<span class="ext">{file.original_name.split('.').pop()}</span>
+								</div>
+							{/if}
 						</div>
-					</div>
+
+						<div class="info">
+							<h3 title={file.original_name}>{file.original_name}</h3>
+							<div class="meta">
+								<span><HardDrive size={12} /> {formatSize(file.size)}</span>
+								<span><Calendar size={12} /> {new Date(file.created_at).toLocaleDateString()}</span>
+								<span
+									class="time-left {getTimeLeft(file.created_at) === 'expired' ? 'expired' : ''}"
+								>
+									<Clock size={12} />
+									{getTimeLeft(file.created_at)}
+								</span>
+							</div>
+						</div>
+					</a>
 
 					<div class="actions">
-						<a
-							href={getFileUrl(file.id)}
-							target="_blank"
-							class="action-btn view-btn"
-							title="View file"
-						>
-							<ExternalLink size={18} />
-						</a>
+						<button class="action-btn copy-btn" title="Copy link" onclick={() => copyLink(file.id)}>
+							{#if copiedId === file.id}
+								<Check size={18} class="success-icon" />
+							{:else}
+								<Copy size={18} />
+							{/if}
+						</button>
 						<form
 							method="POST"
 							action="?/deleteFile"
@@ -153,6 +245,71 @@
 		margin: 0.5rem 0 0 0;
 	}
 
+	.storage-container {
+		background-color: rgba(255, 255, 255, 0.03);
+		border: 1px solid var(--border-color);
+		border-radius: 12px;
+		padding: 1.5rem;
+		display: flex;
+		flex-direction: column;
+		gap: 1rem;
+	}
+
+	.storage-info {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 1.5rem;
+		font-size: 0.9rem;
+		color: var(--text-main);
+	}
+
+	.storage-item {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+	}
+
+	.storage-item.total {
+		margin-left: auto;
+		color: var(--text-muted);
+	}
+
+	.dot {
+		width: 10px;
+		height: 10px;
+		border-radius: 50%;
+	}
+
+	.dot.uploads {
+		background-color: var(--accent);
+	}
+
+	.dot.free {
+		background-color: var(--border-color);
+	}
+
+	.storage-bar-wrapper {
+		width: 100%;
+		height: 12px;
+		background-color: var(--border-color);
+		border-radius: 6px;
+		overflow: hidden;
+		display: flex;
+	}
+
+	.storage-segment {
+		height: 100%;
+		transition: width 0.3s ease;
+	}
+
+	.storage-segment.uploads {
+		background-color: var(--accent);
+	}
+
+	.storage-segment.other {
+		background-color: rgba(255, 255, 255, 0.1);
+	}
+
 	.empty-state {
 		display: flex;
 		flex-direction: column;
@@ -187,6 +344,14 @@
 	.file-card:hover {
 		transform: translateY(-4px);
 		border-color: var(--accent);
+	}
+
+	.card-link {
+		text-decoration: none;
+		color: inherit;
+		display: flex;
+		flex-direction: column;
+		flex: 1;
 	}
 
 	.preview {
@@ -253,6 +418,15 @@
 		gap: 0.4rem;
 	}
 
+	.time-left {
+		color: var(--accent);
+		font-weight: 500;
+	}
+
+	.time-left.expired {
+		color: #ff4757;
+	}
+
 	.actions {
 		padding: 0.75rem 1rem;
 		border-top: 1px solid var(--border-color);
@@ -277,7 +451,7 @@
 		padding: 0;
 	}
 
-	.view-btn:hover {
+	.copy-btn:hover {
 		color: var(--accent);
 		border-color: var(--accent);
 		background-color: rgba(212, 184, 114, 0.05);

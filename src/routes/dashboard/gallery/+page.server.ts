@@ -27,9 +27,31 @@ export const load: PageServerLoad = async () => {
 		{} as Record<string, string>
 	);
 
+	//calculate total upload size
+	const totalUploadsSize = files.reduce((acc, file) => acc + file.size, 0);
+
+	//get disk usage info
+	let diskTotal = 0;
+	let diskFree = 0;
+	try {
+		const uploadDir = env.UPLOAD_DIR || path.resolve(process.cwd(), 'uploads');
+		await fs.mkdir(uploadDir, { recursive: true });
+		const stats = await fs.statfs(uploadDir);
+		diskTotal = Number(stats.bsize) * Number(stats.blocks);
+		diskFree = Number(stats.bsize) * Number(stats.bavail);
+	} catch (err) {
+		console.error('Failed to get disk stats:', err);
+	}
+
 	return {
 		files,
-		siteDomain: settingsMap['site_domain'] || ''
+		siteDomain: settingsMap['site_domain'] || '',
+		retentionPolicy: parseInt(settingsMap['retention_policy'] || '0'),
+		storageStats: {
+			totalUploadsSize,
+			diskTotal,
+			diskFree
+		}
 	};
 };
 
