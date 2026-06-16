@@ -1,5 +1,5 @@
 import db from '$lib/server/db';
-import { error, fail } from '@sveltejs/kit';
+import { fail } from '@sveltejs/kit';
 import fs from 'fs/promises';
 import path from 'path';
 import { env } from '$env/dynamic/private';
@@ -42,7 +42,9 @@ export const actions: Actions = {
 			return fail(400, { error: 'Missing file ID' });
 		}
 
-		const file = db.prepare('SELECT disk_name FROM files WHERE id = ?').get(id) as { disk_name: string } | undefined;
+		const file = db.prepare('SELECT disk_name FROM files WHERE id = ?').get(id) as
+			| { disk_name: string }
+			| undefined;
 
 		if (!file) {
 			return fail(404, { error: 'File not found' });
@@ -52,12 +54,12 @@ export const actions: Actions = {
 			const uploadDir = env.UPLOAD_DIR || path.resolve(process.cwd(), 'uploads');
 			const filePath = path.join(uploadDir, file.disk_name);
 
-			// Delete from disk
+			//delete from disk
 			await fs.unlink(filePath).catch((err) => {
 				console.error(`Failed to delete file from disk: ${filePath}`, err);
 			});
 
-			// Delete from database
+			//delete from database
 			db.prepare('DELETE FROM files WHERE id = ?').run(id);
 
 			return { success: true };

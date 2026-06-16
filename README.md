@@ -1,8 +1,8 @@
-##what is scrapbox?
+## what is scrapbox?
 
-**scrapbox** is a free and open source simple file-hosting service that just works. It allows you to quickly upload anything and get back a shareable link for you to send to others. 
+**scrapbox** is a free and open source simple file-hosting service that just works. It allows you to quickly upload anything and get a shareable link for you to send to others. 
 
-### Features
+### features
 
 - **Chunked Uploads**: large files are split into  chunks during upload. 
 - **Admin Dashboard**: adjust upload settings easily.
@@ -10,8 +10,8 @@
 - **Easy to Customize (WIP)**: planned to have easy use customization settings to make the site look how you want it.
 - **no ads no tracking**
 
-## Installation
+## installation
 (WIP)
 
-## License
+## license
 This project is licensed under the GPL-3.0 - [LICENSE](LICENSE)

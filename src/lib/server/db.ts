@@ -44,7 +44,6 @@ const defaultSettings = [
 	{ key: 'site_domain', value: '' }
 ];
 
-//migration: allowed_file_types -> banned_file_types
 db.prepare("UPDATE settings SET key = 'banned_file_types' WHERE key = 'allowed_file_types'").run();
 
 //load settings
