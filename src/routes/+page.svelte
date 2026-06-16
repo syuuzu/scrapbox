@@ -4,6 +4,17 @@
 
 	let { data }: { data: PageData } = $props();
 
+	let maxUploadSizeFormatted = $derived.by(() => {
+		const bytes = parseInt(data.settings.max_upload_size);
+		if (bytes >= 1024 * 1024 * 1024 && bytes % (1024 * 1024 * 1024) === 0) {
+			return `${bytes / (1024 * 1024 * 1024)} GB`;
+		}
+		if (bytes >= 1024 * 1024 && bytes % (1024 * 1024) === 0) {
+			return `${bytes / (1024 * 1024)} MB`;
+		}
+		return `${Math.round(bytes / 1024)} KB`;
+	});
+
 	let isDragging = $state(false);
 	let dragCount = $state(0);
 	let files: FileList | null = $state(null);
@@ -133,7 +144,7 @@
 			<CloudUpload size={64} strokeWidth={1.5} class="icon" />
 			<h2>click or drag to upload</h2>
 			<p class="subtitle">
-				{(parseInt(data.settings.max_upload_size) / (1024 * 1024)).toFixed(0)} MB max per file
+				{maxUploadSizeFormatted} max per file
 			</p>
 		</label>
 	</div>

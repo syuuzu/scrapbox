@@ -13,10 +13,12 @@
 		Activity,
 		ChevronDown,
 		ChevronUp,
-		ShieldAlert
+		ShieldAlert,
+		LogOut
 	} from 'lucide-svelte';
 	import { enhance } from '$app/forms';
 	import { tick } from 'svelte';
+	import { goto, invalidateAll } from '$app/navigation';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -125,11 +127,24 @@
 		}
 		editingSize = false;
 	}
+
+	async function handleLogout() {
+		const response = await fetch('/api/logout', { method: 'POST' });
+		if (response.ok) {
+			await invalidateAll();
+			await goto('/');
+		}
+	}
 </script>
 
 <main class="container">
 	<div class="header-container">
-		<a href="/" class="back-link">← back to upload</a>
+		<div class="top-row">
+			<a href="/" class="back-link">← back to upload</a>
+			<button class="logout-btn" onclick={handleLogout}>
+				<LogOut size={16} /> logout
+			</button>
+		</div>
 		<h1><Settings size={32} /> settings</h1>
 	</div>
 
@@ -433,6 +448,34 @@
 		display: flex;
 		flex-direction: column;
 		gap: 0.5rem;
+	}
+
+	.top-row {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		width: 100%;
+	}
+
+	.logout-btn {
+		background: transparent;
+		border: 1px solid var(--border-color);
+		color: var(--text-muted);
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		padding: 0.4rem 0.8rem;
+		border-radius: 6px;
+		cursor: pointer;
+		font-size: 0.9rem;
+		font-family: inherit;
+		transition: all 0.2s;
+	}
+
+	.logout-btn:hover {
+		border-color: #ff4757;
+		color: #ff4757;
+		background-color: rgba(255, 71, 87, 0.05);
 	}
 
 	.back-link {

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { ShieldCheck, Lock, AlertCircle } from 'lucide-svelte';
-	import { goto } from '$app/navigation';
+	import { goto, invalidateAll } from '$app/navigation';
 
 	let password = $state('');
 	let confirmPassword = $state('');
@@ -31,6 +31,7 @@
 			const result = await response.json();
 
 			if (result.success) {
+				await invalidateAll();
 				await goto('/settings');
 				return;
 			} else {

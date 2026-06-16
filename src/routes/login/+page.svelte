@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { Lock, AlertCircle, LogIn } from 'lucide-svelte';
-	import { goto } from '$app/navigation';
+	import { goto, invalidateAll } from '$app/navigation';
 
 	let password = $state('');
 	let error = $state('');
@@ -20,6 +20,7 @@
 			const result = await response.json();
 
 			if (result.success) {
+				await invalidateAll();
 				await goto('/settings');
 				return;
 			} else {
