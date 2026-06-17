@@ -18,7 +18,11 @@ export const load: LayoutServerLoad = async (event) => {
 	//protect admin password
 	delete settingsMap.admin_hash;
 
-	const isAdmin = event.cookies.get('admin_session') === 'authenticated';
+	const sessionToken = event.cookies.get('admin_session');
+	const session = sessionToken
+		? db.prepare('SELECT id FROM sessions WHERE id = ?').get(sessionToken)
+		: null;
+	const isAdmin = !!session;
 
 	return {
 		settings: settingsMap,

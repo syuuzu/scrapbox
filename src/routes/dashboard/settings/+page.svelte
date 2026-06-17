@@ -26,8 +26,8 @@
 	let { data }: { data: PageData } = $props();
 
 	let bannedTypes = $state('');
-	let theme = $state('default');
 	let isForever = $state(false);
+
 	let retentionUnit = $state('days');
 	let retentionValue = $state(1);
 	let sizeUnit = $state('MB');
@@ -60,7 +60,6 @@
 
 	$effect(() => {
 		bannedTypes = data.settings.banned_file_types || '';
-		theme = data.settings.theme;
 
 		const rawRetention = parseInt(data.settings.retention_policy);
 		isForever = rawRetention === 0;
@@ -141,11 +140,18 @@
 	}
 </script>
 
+<svelte:head>
+	<title>{data.settings.site_title} - settings</title>
+</svelte:head>
+
 <main class="container">
 	<div class="header-container">
 		<div class="top-row">
-			<a href="/" class="back-link">← back to upload</a>
+			<a href="/" class="back-link" data-sveltekit-reload>← back to upload</a>
 			<div class="top-actions">
+				<a href="/dashboard/appearance" class="gallery-btn">
+					<Palette size={16} /> appearance & tos
+				</a>
 				<a href="/dashboard/gallery" class="gallery-btn">
 					<Image size={16} /> view gallery
 				</a>
@@ -304,19 +310,6 @@
 						placeholder="https://example.com"
 					/>
 					<p class="hint">used to generate file sharing links</p>
-				</div>
-
-				<div class="input-group">
-					<label for="theme">
-						<Palette size={16} /> color theme
-					</label>
-					<select name="theme" id="theme" bind:value={theme}>
-						<option value="default">amber (default)</option>
-						<option value="ocean">ocean blue</option>
-						<option value="forest">forest green</option>
-						<option value="rose">rose red</option>
-						<option value="void">void black</option>
-					</select>
 				</div>
 
 				<div class="advanced-toggle-container">

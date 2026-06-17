@@ -125,16 +125,28 @@ export const handle = async ({ event, resolve }) => {
 
 	//if they are trying to login as admin check their cookie
 	if (isAdminRoute && path !== '/login') {
-		const sessionCookie = event.cookies.get('admin_session');
+		const sessionToken = event.cookies.get('admin_session');
 
-		//stop them if they dont have a cookie
-		if (sessionCookie !== 'authenticated') {
+		// Check if session token exists in DB
+		const session = sessionToken
+			? db.prepare('SELECT id FROM sessions WHERE id = ?').get(sessionToken)
+			: null;
+
+		//stop them if they dont have a valid session
+		if (!session) {
 			throw redirect(302, '/login');
 		}
 	}
 
-	if (path === '/login' && event.cookies.get('admin_session') === 'authenticated') {
-		throw redirect(302, '/dashboard/settings');
+	if (path === '/login') {
+		const sessionToken = event.cookies.get('admin_session');
+		const session = sessionToken
+			? db.prepare('SELECT id FROM sessions WHERE id = ?').get(sessionToken)
+			: null;
+
+		if (session) {
+			throw redirect(302, '/dashboard/settings');
+		}
 	}
 
 	//if they pass all tests

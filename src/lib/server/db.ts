@@ -32,6 +32,14 @@ db.exec(`
 	)
 `);
 
+//sessions table
+db.exec(`
+	CREATE TABLE IF NOT EXISTS sessions (
+		id TEXT PRIMARY KEY,
+		created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+	)
+`);
+
 //default will be 50MB, forever upload time, all file types
 const defaultSettings = [
 	{ key: 'retention_policy', value: '0' },
@@ -41,7 +49,10 @@ const defaultSettings = [
 	{ key: 'rate_limit_window', value: '1000' },
 	{ key: 'rate_limit_max', value: '100' },
 	{ key: 'short_id_length', value: '8' },
-	{ key: 'site_domain', value: '' }
+	{ key: 'site_domain', value: '' },
+	{ key: 'site_title', value: 'scrapbox' },
+	{ key: 'banner_text', value: 'scrapbox - simple file sharing' },
+	{ key: 'tos_content', value: 'Be respectful. No illegal content.' }
 ];
 
 db.prepare("UPDATE settings SET key = 'banned_file_types' WHERE key = 'allowed_file_types'").run();

@@ -149,6 +149,10 @@
 	}
 </script>
 
+<svelte:head>
+	<title>{data.settings.site_title}</title>
+</svelte:head>
+
 <main class="container">
 	{#if data.isAdmin}
 		<a href="/dashboard/settings" class="settings-link" title="Settings">
@@ -157,7 +161,7 @@
 	{/if}
 
 	<div class="logo-container">
-		<h1>scrapbox</h1>
+		<h1>{data.settings.site_title}</h1>
 	</div>
 
 	<div
@@ -199,6 +203,11 @@
 			</button>
 		</div>
 	{/if}
+
+	<footer class="site-footer">
+		<p class="banner">{data.settings.banner_text}</p>
+		<a href="/tos" class="tos-link">Terms of Service</a>
+	</footer>
 </main>
 
 <style>
@@ -343,5 +352,33 @@
 		text-decoration: underline;
 		font-size: 1.2rem;
 		word-break: break-all;
+	}
+
+	.site-footer {
+		margin-top: auto;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.5rem;
+		padding: 2rem 0;
+		color: var(--text-muted);
+		font-size: 0.85rem;
+	}
+
+	.banner {
+		margin: 0;
+		text-align: center;
+		opacity: 0.8;
+	}
+
+	.tos-link {
+		color: var(--accent);
+		text-decoration: none;
+		transition: opacity 0.2s;
+	}
+
+	.tos-link:hover {
+		opacity: 0.8;
+		text-decoration: underline;
 	}
 </style>

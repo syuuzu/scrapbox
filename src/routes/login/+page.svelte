@@ -1,6 +1,9 @@
 <script lang="ts">
 	import { Lock, AlertCircle, LogIn } from 'lucide-svelte';
 	import { goto, invalidateAll } from '$app/navigation';
+	import type { PageData } from './$types';
+
+	let { data }: { data: PageData } = $props();
 
 	let password = $state('');
 	let error = $state('');
@@ -34,9 +37,13 @@
 	}
 </script>
 
+<svelte:head>
+	<title>{data.settings.site_title} - login</title>
+</svelte:head>
+
 <main class="container">
 	<div class="logo-container">
-		<h1>scrapbox</h1>
+		<h1>{data.settings.site_title}</h1>
 		<p class="subtitle">admin login</p>
 	</div>
 

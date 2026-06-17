@@ -82,6 +82,10 @@
 	}
 </script>
 
+<svelte:head>
+	<title>{data.settings.site_title} - gallery</title>
+</svelte:head>
+
 <main class="container">
 	<div class="header-container">
 		<div class="top-row">

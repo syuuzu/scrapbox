@@ -22,7 +22,11 @@ export async function POST({ request, cookies, url }) {
 
 		const isSecure = url.protocol === 'https:';
 
-		cookies.set('admin_session', 'authenticated', {
+		//generate secure session token
+		const sessionId = crypto.randomUUID();
+		db.prepare('INSERT INTO sessions (id) VALUES (?)').run(sessionId);
+
+		cookies.set('admin_session', sessionId, {
 			path: '/',
 			httpOnly: true,
 			sameSite: 'strict',

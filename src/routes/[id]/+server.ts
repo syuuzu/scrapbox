@@ -30,6 +30,9 @@ export async function GET({ params }) {
 
 	const stat = fs.statSync(filePath);
 
+	// Escape quotes in filename to prevent header injection
+	const escapedName = fileRecord.original_name.replace(/"/g, '\\"');
+
 	//new mime logic to avoid dictionary of filetypes
 	const mimeType = mime.lookup(fileRecord.original_name) || 'application/octet-stream';
 	let displayAs = 'attachment';
@@ -51,7 +54,7 @@ export async function GET({ params }) {
 		headers: {
 			'Content-Type': mimeType,
 			'Content-Length': stat.size.toString(),
-			'Content-Disposition': `${displayAs}; filename="${fileRecord.original_name}"`,
+			'Content-Disposition': `${displayAs}; filename="${escapedName}"`,
 			//tell apps they can cache this image for awhile
 			'Cache-Control': 'public, max-age=31536000'
 		}
