@@ -15,11 +15,13 @@ async function cleanupFiles() {
 		const retention = settings ? parseInt(settings.value) : 0;
 
 		if (retention !== 0) {
+			//clean up files based on either custom_retention or global policy
 			const oldFiles = db
 				.prepare(
 					`
 				SELECT id, disk_name FROM files
-				WHERE created_at < datetime('now', '-' || ? || ' minutes')
+				WHERE (custom_retention IS NOT NULL AND created_at < datetime('now', '-' || custom_retention || ' minutes'))
+				OR (custom_retention IS NULL AND created_at < datetime('now', '-' || ? || ' minutes'))
 			`
 				)
 				.all(retention) as { id: string; disk_name: string }[];
@@ -30,6 +32,28 @@ async function cleanupFiles() {
 					await fs.unlink(filePath);
 					db.prepare('DELETE FROM files WHERE id = ?').run(file.id);
 					console.log(`[Cleanup] Deleted expired file: ${file.disk_name}`);
+				} catch (err) {
+					if (err instanceof Error && 'code' in err && err.code === 'ENOENT') {
+						db.prepare('DELETE FROM files WHERE id = ?').run(file.id);
+					}
+				}
+			}
+		} else {
+			const oldFiles = db
+				.prepare(
+					`
+				SELECT id, disk_name FROM files
+				WHERE custom_retention IS NOT NULL AND created_at < datetime('now', '-' || custom_retention || ' minutes')
+			`
+				)
+				.all() as { id: string; disk_name: string }[];
+
+			for (const file of oldFiles) {
+				const filePath = path.join(uploadDir, file.disk_name);
+				try {
+					await fs.unlink(filePath);
+					db.prepare('DELETE FROM files WHERE id = ?').run(file.id);
+					console.log(`[Cleanup] Deleted expired file with custom retention: ${file.disk_name}`);
 				} catch (err) {
 					if (err instanceof Error && 'code' in err && err.code === 'ENOENT') {
 						db.prepare('DELETE FROM files WHERE id = ?').run(file.id);
@@ -127,7 +151,7 @@ export const handle = async ({ event, resolve }) => {
 	if (isAdminRoute && path !== '/login') {
 		const sessionToken = event.cookies.get('admin_session');
 
-		// Check if session token exists in DB
+		//check if session token exists in DB
 		const session = sessionToken
 			? db.prepare('SELECT id FROM sessions WHERE id = ?').get(sessionToken)
 			: null;

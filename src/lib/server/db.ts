@@ -14,15 +14,26 @@ const dbPath = path.join(dataDir, 'scrapbox.db');
 const db = new Database(dbPath);
 
 db.pragma('journal_mode = WAL');
+
 db.exec(`
 	CREATE TABLE IF NOT EXISTS files (
 		id TEXT PRIMARY KEY,
 		original_name TEXT NOT NULL,
 		disk_name TEXT NOT NULL,
 		size INTEGER NOT NULL,
+		is_encrypted INTEGER DEFAULT 0,
 		created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 	)
 `);
+
+//add is_encrypted column if it doesnt exist
+const tableInfo = db.prepare('PRAGMA table_info(files)').all() as { name: string }[];
+if (!tableInfo.some((column) => column.name === 'is_encrypted')) {
+	db.exec('ALTER TABLE files ADD COLUMN is_encrypted INTEGER DEFAULT 0');
+}
+if (!tableInfo.some((column) => column.name === 'custom_retention')) {
+	db.exec('ALTER TABLE files ADD COLUMN custom_retention INTEGER');
+}
 
 //settings table
 db.exec(`
@@ -40,7 +51,7 @@ db.exec(`
 	)
 `);
 
-//default will be 50MB, forever upload time, all file types
+//default is 50MB, forever upload time, all file types
 const defaultSettings = [
 	{ key: 'retention_policy', value: '0' },
 	{ key: 'max_upload_size', value: '52428800' },

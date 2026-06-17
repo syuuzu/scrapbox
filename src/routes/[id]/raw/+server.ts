@@ -12,7 +12,7 @@ export async function GET({ params }) {
 	//look up the file
 	const stmt = db.prepare('SELECT * FROM files WHERE id = ?');
 	const fileRecord = stmt.get(id) as
-		| { disk_name: string; original_name: string; size: number }
+		| { disk_name: string; original_name: string; size: number; is_encrypted: number }
 		| undefined;
 
 	//if the if isn't in db, 404
@@ -30,7 +30,7 @@ export async function GET({ params }) {
 
 	const stat = fs.statSync(filePath);
 
-	// Escape quotes in filename to prevent header injection
+	//prevent header injection
 	const escapedName = fileRecord.original_name.replace(/"/g, '\\"');
 
 	//new mime logic to avoid dictionary of filetypes

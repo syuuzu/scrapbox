@@ -8,12 +8,23 @@
 		HardDrive,
 		Calendar,
 		ArrowLeft,
-		Clock
+		Clock,
+		Lock
 	} from 'lucide-svelte';
 	import { enhance } from '$app/forms';
 	import type { PageData } from './$types';
 
-	let { data }: { data: PageData } = $props();
+	interface FileRecord {
+		id: string;
+		original_name: string;
+		disk_name: string;
+		size: number;
+		is_encrypted: number;
+		custom_retention: number | null;
+		created_at: string;
+	}
+
+	let { data }: { data: PageData & { files: FileRecord[] } } = $props();
 
 	let selectedIds = $state<string[]>([]);
 	let copiedId = $state('');
@@ -53,8 +64,9 @@
 		return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 	}
 
-	function isImage(filename: string) {
-		return /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(filename);
+	function isImage(file: FileRecord) {
+		if (file.is_encrypted) return false;
+		return /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(file.original_name);
 	}
 
 	function getFileUrl(id: string) {
@@ -62,11 +74,12 @@
 		return domain ? `${domain}/${id}` : `/${id}`;
 	}
 
-	function getTimeLeft(createdAt: string) {
-		if (data.retentionPolicy === 0) return 'forever';
+	function getTimeLeft(file: FileRecord) {
+		const retention = file.custom_retention ?? data.retentionPolicy;
+		if (retention === 0) return 'forever';
 
-		const created = new Date(createdAt).getTime();
-		const expires = created + data.retentionPolicy * 60 * 1000;
+		const created = new Date(file.created_at).getTime();
+		const expires = created + retention * 60 * 1000;
 		const now = Date.now();
 		const diff = expires - now;
 
@@ -184,26 +197,33 @@
 						}}
 					>
 						<div class="preview">
-							{#if isImage(file.original_name)}
+							{#if isImage(file)}
 								<img src="/{file.id}" alt={file.original_name} loading="lazy" />
 							{:else}
 								<div class="file-icon">
-									<File size={48} />
-									<span class="ext">{file.original_name.split('.').pop()}</span>
+									{#if file.is_encrypted}
+										<Lock size={48} class="lock-icon" />
+										<span class="ext">encrypted</span>
+									{:else}
+										<File size={48} />
+										<span class="ext">{file.original_name.split('.').pop()}</span>
+									{/if}
 								</div>
 							{/if}
 						</div>
 
 						<div class="info">
-							<h3 title={file.original_name}>{file.original_name}</h3>
+							<h3 title={file.is_encrypted ? file.id : file.original_name}>
+								{#if file.is_encrypted}{file.id}-encrypted
+								{:else}{file.original_name}
+								{/if}
+							</h3>
 							<div class="meta">
 								<span><HardDrive size={12} /> {formatSize(file.size)}</span>
 								<span><Calendar size={12} /> {new Date(file.created_at).toLocaleDateString()}</span>
-								<span
-									class="time-left {getTimeLeft(file.created_at) === 'expired' ? 'expired' : ''}"
-								>
+								<span class="time-left {getTimeLeft(file) === 'expired' ? 'expired' : ''}">
 									<Clock size={12} />
-									{getTimeLeft(file.created_at)}
+									{getTimeLeft(file)}
 								</span>
 							</div>
 						</div>

@@ -150,7 +150,7 @@
 			<a href="/" class="back-link" data-sveltekit-reload>← back to upload</a>
 			<div class="top-actions">
 				<a href="/dashboard/appearance" class="gallery-btn">
-					<Palette size={16} /> appearance & tos
+					<Palette size={16} /> appearance
 				</a>
 				<a href="/dashboard/gallery" class="gallery-btn">
 					<Image size={16} /> view gallery
@@ -183,7 +183,7 @@
 				<div class="input-group">
 					<div class="label-row">
 						<div class="description-text">
-							<Clock size={16} /> file retention:
+							<Clock size={16} /> max storage time:
 							{#if isForever}
 								<span class="value">forever</span>
 							{:else}
@@ -236,7 +236,7 @@
 						</div>
 					{/if}
 					<input type="hidden" name="retention_policy" value={retention} />
-					<p class="hint">how long files stay before deletion</p>
+					<p class="hint">the max time a user can have their files on the server</p>
 				</div>
 
 				<div class="input-group">

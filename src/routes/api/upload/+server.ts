@@ -23,6 +23,8 @@ export async function POST({ request }) {
 		const chunkIndex = parseInt(data.get('chunkIndex') as string);
 		const totalChunks = parseInt(data.get('totalChunks') as string);
 		const totalSize = parseInt(data.get('totalSize') as string);
+		const isEncrypted = data.get('isEncrypted') === 'true' ? 1 : 0;
+		const userRetention = data.get('retention') ? parseInt(data.get('retention') as string) : null;
 
 		if (!chunk || !uploadId) {
 			return json({ error: 'missing chunk data' }, { status: 400 });
@@ -40,6 +42,15 @@ export async function POST({ request }) {
 			},
 			{} as Record<string, string>
 		);
+
+		const globalRetention = parseInt(settingsMap['retention_policy'] || '0');
+		let finalRetention = userRetention;
+
+		if (globalRetention !== 0) {
+			if (userRetention === null || userRetention > globalRetention || userRetention === 0) {
+				finalRetention = globalRetention;
+			}
+		}
 
 		const maxSize = parseInt(settingsMap['max_upload_size']);
 		if (totalSize > maxSize) {
@@ -83,16 +94,21 @@ export async function POST({ request }) {
 		if (chunkIndex === totalChunks - 1) {
 			const idLength = parseInt(settingsMap['short_id_length'] || '8');
 			const shortId = generateShortId(idLength);
-			const safeFilename = `${shortId}-${originalName.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+
+			//generic filename on disk for encrypted files
+			const safeFilename = isEncrypted
+				? `${shortId}-encrypted`
+				: `${shortId}-${originalName.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+
 			const finalFilePath = path.join(uploadDir, safeFilename);
 
 			await fs.rename(tempFilePath, finalFilePath);
 
 			const stmt = db.prepare(`
-					INSERT INTO files (id, original_name, disk_name, size)
-					VALUES (?, ?, ?, ?)
+					INSERT INTO files (id, original_name, disk_name, size, is_encrypted, custom_retention)
+					VALUES (?, ?, ?, ?, ?, ?)
 				`);
-			stmt.run(shortId, originalName, safeFilename, totalSize);
+			stmt.run(shortId, originalName, safeFilename, totalSize, isEncrypted, finalRetention);
 
 			//generate full url if site_domain is set
 			const domain = settingsMap['site_domain']?.replace(/\/$/, '') || '';

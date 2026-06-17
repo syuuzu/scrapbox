@@ -11,6 +11,8 @@ export const load: PageServerLoad = async () => {
 		original_name: string;
 		disk_name: string;
 		size: number;
+		is_encrypted: number;
+		custom_retention: number | null;
 		created_at: string;
 	}[];
 

@@ -29,7 +29,7 @@
 		<div class="top-row">
 			<a href="/dashboard/settings" class="back-link"><ArrowLeft size={16} /> back to settings</a>
 		</div>
-		<h1><Palette size={32} /> appearance & content</h1>
+		<h1><Palette size={32} /> appearance</h1>
 	</div>
 
 	<div class="settings-grid">
