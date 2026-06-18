@@ -30,8 +30,8 @@ export async function GET({ params }) {
 
 	const stat = fs.statSync(filePath);
 
-	//prevent header injection
-	const escapedName = fileRecord.original_name.replace(/"/g, '\\"');
+	//eslint-disable-next-line no-control-regex
+	const safeName = fileRecord.original_name.replace(/[\x00-\x1F\x7F]/g, '').replace(/"/g, '\\"');
 
 	//new mime logic to avoid dictionary of filetypes
 	const mimeType = mime.lookup(fileRecord.original_name) || 'application/octet-stream';
@@ -54,7 +54,7 @@ export async function GET({ params }) {
 		headers: {
 			'Content-Type': mimeType,
 			'Content-Length': stat.size.toString(),
-			'Content-Disposition': `${displayAs}; filename="${escapedName}"`,
+			'Content-Disposition': `${displayAs}; filename="${safeName}"`,
 			//tell apps they can cache this image for awhile
 			'Cache-Control': 'public, max-age=31536000'
 		}

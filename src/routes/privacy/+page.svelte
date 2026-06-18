@@ -37,8 +37,8 @@
 		<section class="policy-section">
 			<h2><Lock size={20} /> Client-Side Encryption</h2>
 			<p>
-				When you enable encryption, your files are protected using <strong>AES-256-GCM</strong>
-				encryption directly in your browser <em>before</em> they are sent to the server.
+				When you enable encryption, your files are protected using <strong>AES-256-GCM</strong> in
+				your browser <em>before</em> they are sent to the server.
 			</p>
 			<div class="technical-note">
 				<ul>
@@ -51,10 +51,9 @@
 		<section class="policy-section">
 			<h2><EyeOff size={20} /> Zero-Knowledge Storage</h2>
 			<p>
-				Because encryption happens on your device, the files stored on there server's disks are
-				secure.
+				Because encryption happens on your device
 				<strong
-					>Site administrators cannot decrypt or view the contents of your encrypted files.</strong
+					>site administrators cannot decrypt or view the contents of your encrypted files.</strong
 				>
 			</p>
 			<p>

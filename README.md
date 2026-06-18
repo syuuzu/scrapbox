@@ -1,17 +1,60 @@
-## what is scrapbox?
+<div align = center>
 
-**scrapbox** is a free and open source simple file-hosting service that just works. It allows you to quickly upload anything and get a shareable link for you to send to others. 
+scrapbox is a free and open source, privacy respecting, simple file-hosting service. 
 
-### features
+it allows you to quickly upload anything and get a shareable link for you to send to others. 
 
-- **Chunked Uploads**: large files are split into  chunks during upload. 
-- **Admin Dashboard**: adjust upload settings easily.
-- **Retention Policies**: automatically delete files after a set amount of time (minutes to years) or keep them forever.
-- **Easy to Customize (WIP)**: planned to have easy use customization settings to make the site look how you want it.
-- **no ads no tracking**
+</div>
 
-## installation
-(WIP)
+# Features
+- Encrypted Uploads: users can choose to upload files with AES-256-GCM encryption directly in browser.
+- Chunked Uploads: large files are split into chunks during upload. 
+- Admin Dashboard: adjust upload and appearance settings easily.
+- Upload Timers: automatically delete files after a set amount of time defined by the users and host.
+- Clean UI: no ads and a minimal design
 
-## license
+## Run Your Own Instance
+
+The easiest way to host your own instance is using a docker compose and reverse proxy with Caddy. 
+
+1. **Create a `docker-compose.yml` file:**
+
+```yaml
+services:
+  scrapbox:
+    image: syuuzu/scrapbox:latest
+    container_name: scrapbox
+    volumes:
+      - ./database:/app/database:rw
+      - ./uploads:/app/uploads:rw
+    ports:
+      - '3815:3815'
+    restart: always
+```
+
+2. **start the instance:**
+
+```bash
+docker compose up -d
+```
+
+Open the instance at `http://localhost:3815` and set up an admin password. You can login to the account at http://localhost:3815/login. 
+
+### Reverse Proxy (Recommended)
+File encryption might break on certain browsers if scrapbox isn't served over https. You should probably use a reverse proxy like [Caddy](https://github.com/caddyserver/caddy).
+
+**`Caddyfile` Example:**
+   ```caddy
+   your-domain.com {
+       reverse_proxy :3815
+   }
+   ```
+
+## Planned Features
+- Site Mascot and Branding: every good project has a mascot! branding too I guess...
+- Custom CSS support: theme the site to your hearts content. 
+- UI Localization: I want to have support for all around the world.
+- Opt-In Logging: option to enable IP logging of requests for moderation purposes.
+
+## License
 This project is licensed under the GPL-3.0 - [LICENSE](LICENSE)

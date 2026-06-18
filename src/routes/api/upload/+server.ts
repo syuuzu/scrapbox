@@ -19,6 +19,12 @@ export async function POST({ request }) {
 
 		const chunk = data.get('chunk') as Blob;
 		const uploadId = data.get('uploadId') as string;
+
+		//validate uploadId to prevent path traversal
+		if (!uploadId || !/^[a-z0-9]+$/.test(uploadId)) {
+			return json({ error: 'invalid upload identifier' }, { status: 400 });
+		}
+
 		const originalName = data.get('filename') as string;
 		const chunkIndex = parseInt(data.get('chunkIndex') as string);
 		const totalChunks = parseInt(data.get('totalChunks') as string);

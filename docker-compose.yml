@@ -1,10 +1,10 @@
 services:
   scrapbox:
-    build: .
-    restart: unless-stopped
+    image: syuuzu/scrapbox:latest
+    container_name: scrapbox
+    volumes:
+      - ./database:/app/database:rw
+      - ./uploads:/app/uploads:rw
     ports:
       - '3815:3815'
-    environment:
-      - UPLOAD_DIR=/data/uploads
-    volumes:
-      - ./uploads:/data/uploads
+    restart: always

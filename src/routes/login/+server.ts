@@ -4,7 +4,7 @@ import db from '$lib/server/db';
 
 export async function POST({ request, cookies, url }) {
 	try {
-		const { password } = await request.json();
+		const { password, remember } = await request.json();
 
 		const adminRecord = db.prepare("SELECT value FROM settings WHERE key = 'admin_hash'").get() as
 			| { value: string }
@@ -31,7 +31,7 @@ export async function POST({ request, cookies, url }) {
 			httpOnly: true,
 			sameSite: 'strict',
 			secure: isSecure,
-			maxAge: 60 * 60 * 24 * 7 // 1 week
+			...(remember ? { maxAge: 60 * 60 * 24 * 7 } : {})
 		});
 
 		return json({ success: true });

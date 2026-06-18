@@ -6,6 +6,7 @@
 	let { data }: { data: PageData } = $props();
 
 	let password = $state('');
+	let remember = $state(false);
 	let error = $state('');
 	let loading = $state(false);
 
@@ -17,7 +18,7 @@
 			const response = await fetch('/login', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ password })
+				body: JSON.stringify({ password, remember })
 			});
 
 			const result = await response.json();
@@ -74,6 +75,14 @@
 						required
 					/>
 				</div>
+			</div>
+
+			<div class="remember-me">
+				<label class="checkbox-container">
+					<input type="checkbox" bind:checked={remember} />
+					<span class="checkmark"></span>
+					remember me
+				</label>
 			</div>
 
 			{#if error}
@@ -169,6 +178,66 @@
 		font-size: 0.85rem;
 		color: var(--text-muted);
 		font-weight: 500;
+	}
+
+	.remember-me {
+		display: flex;
+		align-items: center;
+	}
+
+	.checkbox-container {
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
+		cursor: pointer;
+		user-select: none;
+		font-size: 0.9rem;
+		color: var(--text-muted);
+		font-weight: 400;
+	}
+
+	.checkbox-container input {
+		position: absolute;
+		opacity: 0;
+		cursor: pointer;
+		height: 0;
+		width: 0;
+	}
+
+	.checkmark {
+		height: 18px;
+		width: 18px;
+		background-color: rgba(0, 0, 0, 0.2);
+		border: 1px solid var(--border-color);
+		border-radius: 4px;
+		position: relative;
+		transition: all 0.2s;
+	}
+
+	.checkbox-container:hover input ~ .checkmark {
+		border-color: var(--accent);
+	}
+
+	.checkbox-container input:checked ~ .checkmark {
+		background-color: var(--accent);
+		border-color: var(--accent);
+	}
+
+	.checkmark:after {
+		content: '';
+		position: absolute;
+		display: none;
+		left: 6px;
+		top: 2px;
+		width: 4px;
+		height: 9px;
+		border: solid black;
+		border-width: 0 2px 2px 0;
+		transform: rotate(45deg);
+	}
+
+	.checkbox-container input:checked ~ .checkmark:after {
+		display: block;
 	}
 
 	.input-wrapper {
