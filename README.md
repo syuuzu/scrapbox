@@ -31,7 +31,7 @@ services:
       - ./uploads:/app/uploads:rw
     ports:
       - '3815:3815'
-    restart: always
+    restart: unless-stopped
 ```
 
 2. **Start the instance:**
