@@ -4,7 +4,7 @@
 
 scrapbox is a free and open source, privacy respecting, simple file-hosting service. 
 
-it allows you to quickly upload anything and get a shareable link for you to send to others. 
+quickly upload files and get a shareable link for you to send to others. 
 
 </div>
 
