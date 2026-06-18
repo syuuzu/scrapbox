@@ -1,5 +1,5 @@
 <div align = center>
-[scrap box logo goes here]
+[cool scrapbox logo goes here]
 
 scrapbox is a free and open source, privacy respecting, simple file-hosting service. 
 
