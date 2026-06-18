@@ -1,4 +1,5 @@
 <div align = center>
+[scrap box logo goes here]
 
 scrapbox is a free and open source, privacy respecting, simple file-hosting service. 
 
@@ -6,10 +7,10 @@ it allows you to quickly upload anything and get a shareable link for you to sen
 
 </div>
 
-# Features
+## Features
 - Encrypted Uploads: users can choose to upload files with AES-256-GCM encryption directly in browser.
 - Chunked Uploads: large files are split into chunks during upload. 
-- Admin Dashboard: adjust upload and appearance settings easily.
+- Admin Dashboard: adjust your instance's upload settings, terms of service, and site appearance easily.
 - Upload Timers: automatically delete files after a set amount of time defined by the users and host.
 - Clean UI: no ads and a minimal design
 
@@ -32,7 +33,7 @@ services:
     restart: always
 ```
 
-2. **start the instance:**
+2. **Start the instance:**
 
 ```bash
 docker compose up -d
@@ -43,7 +44,7 @@ Open the instance at `http://localhost:3815` and set up an admin password. You c
 ### Reverse Proxy (Recommended)
 File encryption might break on certain browsers if scrapbox isn't served over https. You should probably use a reverse proxy like [Caddy](https://github.com/caddyserver/caddy).
 
-**`Caddyfile` Example:**
+**`Caddyfile Example`:**
    ```caddy
    your-domain.com {
        reverse_proxy :3815
@@ -51,10 +52,11 @@ File encryption might break on certain browsers if scrapbox isn't served over ht
    ```
 
 ## Planned Features
-- Site Mascot and Branding: every good project has a mascot! branding too I guess...
+- Better README: this readme kinda sucks...
+- Site Mascot and Branding: every good project has a mascot! 
 - Custom CSS support: theme the site to your hearts content. 
 - UI Localization: I want to have support for all around the world.
-- Opt-In Logging: option to enable IP logging of requests for moderation purposes.
+- IP Logging Setting: Admin option to enable IP logging of requests for moderation purposes.
 
 ## License
 This project is licensed under the GPL-3.0 - [LICENSE](LICENSE)
