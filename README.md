@@ -56,7 +56,7 @@ File encryption might break on certain browsers if scrapbox isn't served over ht
 - Better README: this readme kinda sucks...
 - Site Mascot and Branding: every good project has a mascot! 
 - Custom CSS support: theme the site to your hearts content. 
-- UI Localization: I want to have support for all around the world.
+- UI Localization: I want to add language options.
 - IP Logging Setting: Admin option to enable IP logging of requests for moderation purposes.
 
 ## License
