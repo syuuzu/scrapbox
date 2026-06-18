@@ -59,7 +59,7 @@
 	function formatSize(bytes: number) {
 		if (bytes === 0) return '0 B';
 		const k = 1024;
-		const sizes = ['B', 'KB', 'MB', 'GB'];
+		const sizes = ['B', 'KB', 'MB', 'GB', 'TB', 'PB'];
 		const i = Math.floor(Math.log(bytes) / Math.log(k));
 		return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 	}
@@ -78,7 +78,10 @@
 		const retention = file.custom_retention ?? data.retentionPolicy;
 		if (retention === 0) return 'forever';
 
-		const created = new Date(file.created_at).getTime();
+		const createdAt = file.created_at.includes(' ')
+			? file.created_at.replace(' ', 'T') + 'Z'
+			: file.created_at;
+		const created = new Date(createdAt).getTime();
 		const expires = created + retention * 60 * 1000;
 		const now = Date.now();
 		const diff = expires - now;

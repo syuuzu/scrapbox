@@ -112,17 +112,9 @@
 		}
 	});
 
-	//set initial retention to the first available option or the global max
 	$effect(() => {
-		if (selectedRetention === 0 && retentionOptions.length > 0) {
-			const globalMax = parseInt(data.settings.retention_policy || '0');
-			if (globalMax !== 0) {
-				const idx = retentionOptions.findIndex((o) => o.value === globalMax);
-				if (idx !== -1) retentionIndex = idx;
-			} else {
-				//if forever is allowed, default to the last one (forever)
-				retentionIndex = retentionOptions.length - 1;
-			}
+		if (retentionOptions.length > 0) {
+			retentionIndex = retentionOptions.length - 1;
 		}
 	});
 
