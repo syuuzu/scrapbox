@@ -40,7 +40,7 @@ services:
 docker compose up -d
 ```
 
-Open the instance at `http://localhost:3815` and set up an admin password. You can login to the account at http://localhost:3815/login. 
+Open the instance at `http://localhost:3815` and set up an admin password. You can login to the account at `http://localhost:3815/login`. 
 
 ### Reverse Proxy (Recommended)
 File encryption might break on certain browsers if scrapbox isn't served over https. You should probably use a reverse proxy like [Caddy](https://github.com/caddyserver/caddy).
