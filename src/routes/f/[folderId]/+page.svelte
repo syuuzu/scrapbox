@@ -8,7 +8,8 @@
 		ArrowLeft,
 		Clock,
 		Lock,
-		FolderOpen
+		FolderOpen,
+		Link
 	} from 'lucide-svelte';
 	import type { PageData } from './$types';
 
@@ -26,6 +27,19 @@
 
 	let copiedId = $state('');
 	let allCopied = $state(false);
+	let folderCopied = $state(false);
+
+	async function copyFolderLink() {
+		try {
+			await navigator.clipboard.writeText(window.location.href);
+			folderCopied = true;
+			setTimeout(() => {
+				folderCopied = false;
+			}, 2000);
+		} catch (err) {
+			console.error('Failed to copy folder link:', err);
+		}
+	}
 
 	async function copyLink(id: string) {
 		const url = getFileUrl(id);
@@ -115,13 +129,22 @@
 	<div class="header-container">
 		<div class="top-row">
 			<a href="/" class="back-link"><ArrowLeft size={16} /> back to upload</a>
-			<button class="copy-all-btn" onclick={copyAllLinks}>
-				{#if allCopied}
-					<Check size={16} /> copied all
-				{:else}
-					<Copy size={16} /> copy all links
-				{/if}
-			</button>
+			<div class="top-actions">
+				<button class="copy-all-btn" onclick={copyFolderLink}>
+					{#if folderCopied}
+						<Check size={16} /> copied folder link
+					{:else}
+						<Link size={16} /> copy folder link
+					{/if}
+				</button>
+				<button class="copy-all-btn" onclick={copyAllLinks}>
+					{#if allCopied}
+						<Check size={16} /> copied all
+					{:else}
+						<Copy size={16} /> copy all links
+					{/if}
+				</button>
+			</div>
 		</div>
 		<h1><FolderOpen size={32} /> folder gallery</h1>
 		<p class="stats">
@@ -209,6 +232,12 @@
 		justify-content: space-between;
 		align-items: center;
 		margin-bottom: 0.5rem;
+	}
+
+	.top-actions {
+		display: flex;
+		gap: 0.5rem;
+		align-items: center;
 	}
 
 	.back-link {
