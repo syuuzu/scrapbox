@@ -19,6 +19,7 @@ export async function POST({ request }) {
 
 		const chunk = data.get('chunk') as Blob;
 		const uploadId = data.get('uploadId') as string;
+		const folderId = data.get('folderId') as string | null;
 
 		//validate uploadId to prevent path traversal
 		if (!uploadId || !/^[a-z0-9]+$/.test(uploadId)) {
@@ -111,10 +112,10 @@ export async function POST({ request }) {
 			await fs.rename(tempFilePath, finalFilePath);
 
 			const stmt = db.prepare(`
-					INSERT INTO files (id, original_name, disk_name, size, is_encrypted, custom_retention)
-					VALUES (?, ?, ?, ?, ?, ?)
+					INSERT INTO files (id, original_name, disk_name, size, is_encrypted, custom_retention, folder_id)
+					VALUES (?, ?, ?, ?, ?, ?, ?)
 				`);
-			stmt.run(shortId, originalName, safeFilename, totalSize, isEncrypted, finalRetention);
+			stmt.run(shortId, originalName, safeFilename, totalSize, isEncrypted, finalRetention, folderId);
 
 			//generate full url if site_domain is set
 			const domain = settingsMap['site_domain']?.replace(/\/$/, '') || '';

@@ -22,7 +22,8 @@ db.exec(`
 		disk_name TEXT NOT NULL,
 		size INTEGER NOT NULL,
 		is_encrypted INTEGER DEFAULT 0,
-		created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+		created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+		folder_id TEXT
 	)
 `);
 
@@ -33,6 +34,9 @@ if (!tableInfo.some((column) => column.name === 'is_encrypted')) {
 }
 if (!tableInfo.some((column) => column.name === 'custom_retention')) {
 	db.exec('ALTER TABLE files ADD COLUMN custom_retention INTEGER');
+}
+if (!tableInfo.some((column) => column.name === 'folder_id')) {
+	db.exec('ALTER TABLE files ADD COLUMN folder_id TEXT');
 }
 
 //settings table

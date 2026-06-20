@@ -43,6 +43,8 @@
 	let dragCount = $state(0);
 	let files: FileList | null = $state(null);
 	let uploadProgress = $state(0);
+	let totalFilesToUpload = $state(0);
+	let currentFileUploading = $state(0);
 	let finalUrl = $state('');
 	let copied = $state(false);
 
@@ -185,14 +187,13 @@
 		}
 	}
 
-	async function uploadFile(file: File) {
+	async function uploadSingleFile(file: File, folderId: string | null) {
 		let fileToUpload: File | Blob = file;
 		let originalFileName = file.name;
 
 		if (isEncryptionEnabled) {
 			if (!password) {
-				alert('Please enter a password for encryption.');
-				return;
+				throw new Error('Please enter a password for encryption.');
 			}
 			uploadProgress = 1; //show initial activity
 			try {
@@ -200,8 +201,7 @@
 				originalFileName = 'encrypted-file';
 			} catch (err) {
 				console.error('Encryption failed:', err);
-				alert('Failed to encrypt file. Please try again.');
-				return;
+				throw new Error('Failed to encrypt file. Please try again.', { cause: err });
 			}
 		}
 
@@ -210,28 +210,28 @@
 		const totalChunks = Math.ceil(fileToUpload.size / CHUNK_SIZE);
 
 		const uploadId = Math.random().toString(36).substring(2) + Date.now().toString(36);
-		finalUrl = '';
-		uploadProgress = 0;
+		let fileFinalUrl = '';
 
 		for (let i = 0; i < totalChunks; i++) {
 			const start = i * CHUNK_SIZE;
 			const end = Math.min(start + CHUNK_SIZE, fileToUpload.size);
 			const chunk = fileToUpload.slice(start, end);
 
-			const formData = new FormData();
-			formData.append('chunk', chunk);
-			formData.append('uploadId', uploadId);
-			formData.append('filename', originalFileName);
-			formData.append('chunkIndex', i.toString());
-			formData.append('totalChunks', totalChunks.toString());
-			formData.append('totalSize', fileToUpload.size.toString());
-			formData.append('isEncrypted', isEncryptionEnabled ? 'true' : 'false');
-			formData.append('retention', selectedRetention.toString());
-
 			let retries = 3;
 			let success = false;
 
 			while (retries > 0 && !success) {
+				const formData = new FormData();
+				formData.append('chunk', chunk);
+				formData.append('uploadId', uploadId);
+				if (folderId) formData.append('folderId', folderId);
+				formData.append('filename', originalFileName);
+				formData.append('chunkIndex', i.toString());
+				formData.append('totalChunks', totalChunks.toString());
+				formData.append('totalSize', fileToUpload.size.toString());
+				formData.append('isEncrypted', isEncryptionEnabled ? 'true' : 'false');
+				formData.append('retention', selectedRetention.toString());
+
 				try {
 					const response = await fetch('/api/upload', {
 						method: 'POST',
@@ -253,27 +253,74 @@
 
 					if (!result.success) {
 						console.error('Upload failed on chunk', i, result.error);
-						alert(`Upload failed: ${result.error}`);
-						return;
+						throw new Error(`Upload failed: ${result.error}`);
 					}
 
 					success = true;
 					uploadProgress = Math.round(((i + 1) / totalChunks) * 100);
 
 					if (result.finished) {
-						finalUrl = result.url;
+						fileFinalUrl = result.url;
 					}
 				} catch (error) {
 					console.error(`Error on chunk ${i}, attempts remaining: ${retries - 1}`, error);
 					retries--;
 					if (retries === 0) {
-						alert('Upload failed after multiple attempts. Please check your connection.');
-						return;
+						throw new Error(
+							'Upload failed after multiple attempts. Please check your connection.',
+							{ cause: error }
+						);
 					}
 					//exponential backoff
 					await new Promise((resolve) => setTimeout(resolve, (3 - retries) * 1000));
 				}
 			}
+		}
+		return fileFinalUrl;
+	}
+
+	async function uploadFiles(fileList: FileList) {
+		if (fileList.length === 0) return;
+
+		const maxSize = parseInt(data.settings.max_upload_size || '52428800');
+
+		for (let i = 0; i < fileList.length; i++) {
+			if (fileList[i].size > maxSize) {
+				const sizeMB = (maxSize / (1024 * 1024)).toFixed(2);
+				alert(`File "${fileList[i].name}" is larger than ${sizeMB} MB`);
+				return;
+			}
+		}
+
+		totalFilesToUpload = fileList.length;
+		currentFileUploading = 1;
+		finalUrl = '';
+		uploadProgress = 0;
+
+		let folderId: string | null = null;
+		if (fileList.length > 1) {
+			folderId = Math.random().toString(36).substring(2, 10);
+		}
+
+		try {
+			let lastUrl = '';
+			for (let i = 0; i < fileList.length; i++) {
+				currentFileUploading = i + 1;
+				uploadProgress = 0;
+				lastUrl = await uploadSingleFile(fileList[i], folderId);
+			}
+
+			if (fileList.length > 1) {
+				const domain = data.settings.site_domain?.replace(/\/$/, '') || '';
+				finalUrl = domain ? `${domain}/f/${folderId}` : `/f/${folderId}`;
+			} else {
+				finalUrl = lastUrl;
+			}
+		} catch (err) {
+			alert(err instanceof Error ? err.message : String(err));
+		} finally {
+			totalFilesToUpload = 0;
+			currentFileUploading = 0;
 		}
 	}
 
@@ -304,10 +351,10 @@
 		isDragging = false;
 		if (event.dataTransfer?.files && event.dataTransfer.files.length > 0) {
 			files = event.dataTransfer.files;
-			console.log('Uploading dropped file:', files[0].name);
+			console.log('Uploading dropped files:', files.length);
 
 			//upload
-			uploadFile(files[0]);
+			uploadFiles(files);
 		}
 	}
 
@@ -315,10 +362,10 @@
 		const target = event.target as HTMLInputElement;
 		if (target.files && target.files.length > 0) {
 			files = target.files;
-			console.log('File selected:', files[0].name);
+			console.log('Files selected:', files.length);
 
 			//upload
-			uploadFile(files[0]);
+			uploadFiles(files);
 		}
 	}
 </script>
@@ -342,7 +389,13 @@
 			ondragover={(e) => e.preventDefault()}
 			ondrop={handleDrop}
 		>
-			<input type="file" id="file-upload" class="hidden-input" onchange={handleFileSelect} />
+			<input
+				type="file"
+				id="file-upload"
+				class="hidden-input"
+				multiple
+				onchange={handleFileSelect}
+			/>
 
 			<label for="file-upload" class="upload-content">
 				<CloudUpload size={64} strokeWidth={1.5} class="icon" />
@@ -431,9 +484,13 @@
 		{/if}
 	</div>
 
-	{#if uploadProgress > 0 && uploadProgress < 100}
+	{#if (uploadProgress > 0 && uploadProgress < 100) || (totalFilesToUpload > 1 && currentFileUploading <= totalFilesToUpload)}
 		<div class="progress-container">
-			<p>Uploading... {uploadProgress}%</p>
+			{#if totalFilesToUpload > 1}
+				<p>Uploading file {currentFileUploading} of {totalFilesToUpload}... {uploadProgress}%</p>
+			{:else}
+				<p>Uploading... {uploadProgress}%</p>
+			{/if}
 			<div class="progress-bar">
 				<div class="progress-fill" style="width: {uploadProgress}%"></div>
 			</div>
@@ -444,7 +501,9 @@
 		<div class="success-box">
 			<button class="copy-button" onclick={copyToClipboard} type="button">
 				<p>{copied ? 'copied!' : 'upload complete!'}</p>
-				<span class="share-link">
+				<!-- svelte-ignore a11y_click_events_have_key_events -->
+				<!-- svelte-ignore a11y_no_static_element_interactions -->
+				<span class="share-link" onclick={(e) => { e.stopPropagation(); window.open(finalUrl, '_blank'); }}>
 					{finalUrl}
 				</span>
 			</button>

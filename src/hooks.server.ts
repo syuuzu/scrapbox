@@ -20,7 +20,7 @@ async function cleanupFiles() {
 				.prepare(
 					`
 				SELECT id, disk_name FROM files
-				WHERE (custom_retention IS NOT NULL AND created_at < datetime('now', '-' || custom_retention || ' minutes'))
+				WHERE (custom_retention IS NOT NULL AND custom_retention != 0 AND created_at < datetime('now', '-' || custom_retention || ' minutes'))
 				OR (custom_retention IS NULL AND created_at < datetime('now', '-' || ? || ' minutes'))
 			`
 				)
@@ -43,7 +43,7 @@ async function cleanupFiles() {
 				.prepare(
 					`
 				SELECT id, disk_name FROM files
-				WHERE custom_retention IS NOT NULL AND created_at < datetime('now', '-' || custom_retention || ' minutes')
+				WHERE custom_retention IS NOT NULL AND custom_retention != 0 AND created_at < datetime('now', '-' || custom_retention || ' minutes')
 			`
 				)
 				.all() as { id: string; disk_name: string }[];
