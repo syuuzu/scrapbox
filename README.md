@@ -14,6 +14,7 @@ quickly upload files and get a shareable link for you to send to others.
 - Admin Dashboard: adjust your instance's upload settings, terms of service, and site appearance easily.
 - Upload Timers: automatically delete files after a set amount of time defined by the users and host.
 - Clean UI: no ads and a minimal design
+- Custom CSS
 
 ## Run Your Own Instance
 
@@ -54,8 +55,7 @@ File encryption might break on certain browsers if scrapbox isn't served over ht
 
 ## Planned Features
 - Better README: this readme kinda sucks...
-- Site Mascot and Branding: every good project has a mascot! 
-- Custom CSS support: theme the site to your hearts content. 
+- Site Mascot and Branding: every good project has a mascot!  
 - UI Localization: I want to add language options.
 - IP Logging Setting: Admin option to enable IP logging of requests for moderation purposes.
 
