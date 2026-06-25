@@ -27,6 +27,7 @@ export const actions: Actions = {
 		const siteTitle = data.get('site_title');
 		const bannerText = data.get('banner_text');
 		const tosContent = data.get('tos_content');
+		const customCss = data.get('custom_css');
 
 		const updateSetting = db.prepare('UPDATE settings SET value = ? WHERE key = ?');
 
@@ -34,6 +35,7 @@ export const actions: Actions = {
 		if (siteTitle !== null) updateSetting.run(siteTitle.toString(), 'site_title');
 		if (bannerText !== null) updateSetting.run(bannerText.toString(), 'banner_text');
 		if (tosContent !== null) updateSetting.run(tosContent.toString(), 'tos_content');
+		if (customCss !== null) updateSetting.run(customCss.toString(), 'custom_css');
 
 		return { success: true };
 	}

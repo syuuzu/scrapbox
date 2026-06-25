@@ -8,6 +8,9 @@
 
 <svelte:head>
 	<link rel="icon" href={favicon} />
+	{#if data.customCss}
+		<link rel="stylesheet" href="/api/custom.css" />
+	{/if}
 </svelte:head>
 
 <div class="theme-wrapper theme-{data.theme}">

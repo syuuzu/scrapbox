@@ -15,7 +15,7 @@ async function cleanupFiles() {
 		const retention = settings ? parseInt(settings.value) : 0;
 
 		if (retention !== 0) {
-			//clean up files based on either custom_retention or global policy
+			//clean up files
 			const oldFiles = db
 				.prepare(
 					`

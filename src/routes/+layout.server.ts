@@ -27,6 +27,7 @@ export const load: LayoutServerLoad = async (event) => {
 	return {
 		settings: settingsMap,
 		theme: settingsMap.theme || 'default',
+		customCss: settingsMap.custom_css || '',
 		isAdmin
 	};
 };

@@ -67,7 +67,8 @@ const defaultSettings = [
 	{ key: 'site_domain', value: '' },
 	{ key: 'site_title', value: 'scrapbox' },
 	{ key: 'banner_text', value: 'scrapbox - simple file sharing' },
-	{ key: 'tos_content', value: 'Be respectful. No illegal content.' }
+	{ key: 'tos_content', value: 'Be respectful. No illegal content.' },
+	{ key: 'custom_css', value: '' }
 ];
 
 db.prepare("UPDATE settings SET key = 'banned_file_types' WHERE key = 'allowed_file_types'").run();

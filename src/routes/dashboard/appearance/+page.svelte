@@ -9,12 +9,14 @@
 	let siteTitle = $state('');
 	let bannerText = $state('');
 	let tosContent = $state('');
+	let customCss = $state('');
 
 	$effect(() => {
 		theme = data.settings.theme || 'default';
 		siteTitle = data.settings.site_title || 'scrapbox';
 		bannerText = data.settings.banner_text || '';
 		tosContent = data.settings.tos_content || '';
+		customCss = data.settings.custom_css || '';
 	});
 
 	let success = $state(false);
@@ -103,6 +105,21 @@
 						placeholder="Write your instance rules here..."
 					></textarea>
 					<p class="hint">detailed rules for what users can and cannot upload</p>
+				</div>
+
+				<div class="input-group">
+					<label for="custom_css">
+						<FileText size={16} /> custom css
+					</label>
+					<textarea
+						name="custom_css"
+						id="custom_css"
+						bind:value={customCss}
+						rows="8"
+						placeholder="/* Add your custom CSS here */"
+						style="font-family: monospace;"
+					></textarea>
+					<p class="hint">inject custom css to change the look of the site</p>
 				</div>
 
 				<button type="submit" class="save-btn">
