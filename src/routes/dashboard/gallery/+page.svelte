@@ -38,8 +38,8 @@
 		}
 	}
 
-	async function copyLink(id: string) {
-		const url = getFileUrl(id);
+	async function copyLink(file: FileRecord) {
+		const url = getFileUrl(file);
 		try {
 			//if domain is relative make it absolute for clipboard
 			const absoluteUrl = url.startsWith('http')
@@ -47,9 +47,9 @@
 				: window.location.origin + (url.startsWith('/') ? '' : '/') + url;
 
 			await navigator.clipboard.writeText(absoluteUrl);
-			copiedId = id;
+			copiedId = file.id;
 			setTimeout(() => {
-				if (copiedId === id) copiedId = '';
+				if (copiedId === file.id) copiedId = '';
 			}, 2000);
 		} catch (err) {
 			console.error('Failed to copy link:', err);
@@ -69,9 +69,14 @@
 		return /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(file.original_name);
 	}
 
-	function getFileUrl(id: string) {
+	function getFileUrl(file: FileRecord) {
 		const domain = data.siteDomain.replace(/\/$/, '') || '';
-		return domain ? `${domain}/${id}` : `/${id}`;
+		let ext = '';
+		if (file.original_name) {
+			const parts = file.original_name.split('.');
+			if (parts.length > 1) ext = '.' + parts.pop();
+		}
+		return domain ? `${domain}/${file.id}${ext}` : `/${file.id}${ext}`;
 	}
 
 	function getTimeLeft(file: FileRecord) {
@@ -189,7 +194,7 @@
 						aria-label="Select file"
 					></button>
 					<a
-						href={getFileUrl(file.id)}
+						href={getFileUrl(file)}
 						target="_blank"
 						class="card-link"
 						onclick={(e) => {
@@ -233,7 +238,7 @@
 					</a>
 
 					<div class="actions">
-						<button class="action-btn copy-btn" title="Copy link" onclick={() => copyLink(file.id)}>
+						<button class="action-btn copy-btn" title="Copy link" onclick={() => copyLink(file)}>
 							{#if copiedId === file.id}
 								<Check size={18} class="success-icon" />
 							{:else}

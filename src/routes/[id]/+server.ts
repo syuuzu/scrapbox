@@ -7,7 +7,9 @@ import db from '$lib/server/db';
 import mime from 'mime-types';
 
 export async function GET({ params, url }) {
-	const { id } = params;
+	const rawId = params.id;
+	// Remove extension if present (e.g. from /abc123.jpg to abc123)
+	const id = rawId.includes('.') ? rawId.substring(0, rawId.indexOf('.')) : rawId;
 
 	//look up the file
 	const stmt = db.prepare('SELECT * FROM files WHERE id = ?');

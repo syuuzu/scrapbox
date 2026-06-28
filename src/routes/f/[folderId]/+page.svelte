@@ -41,17 +41,17 @@
 		}
 	}
 
-	async function copyLink(id: string) {
-		const url = getFileUrl(id);
+	async function copyLink(file: FileRecord) {
+		const url = getFileUrl(file);
 		try {
 			const absoluteUrl = url.startsWith('http')
 				? url
 				: window.location.origin + (url.startsWith('/') ? '' : '/') + url;
 
 			await navigator.clipboard.writeText(absoluteUrl);
-			copiedId = id;
+			copiedId = file.id;
 			setTimeout(() => {
-				if (copiedId === id) copiedId = '';
+				if (copiedId === file.id) copiedId = '';
 			}, 2000);
 		} catch (err) {
 			console.error('Failed to copy link:', err);
@@ -62,7 +62,7 @@
 		try {
 			const links = data.files
 				.map((file: FileRecord) => {
-					const url = getFileUrl(file.id);
+					const url = getFileUrl(file);
 					return url.startsWith('http')
 						? url
 						: window.location.origin + (url.startsWith('/') ? '' : '/') + url;
@@ -92,9 +92,14 @@
 		return /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(file.original_name);
 	}
 
-	function getFileUrl(id: string) {
+	function getFileUrl(file: FileRecord) {
 		const domain = data.siteDomain.replace(/\/$/, '') || '';
-		return domain ? `${domain}/${id}` : `/${id}`;
+		let ext = '';
+		if (file.original_name) {
+			const parts = file.original_name.split('.');
+			if (parts.length > 1) ext = '.' + parts.pop();
+		}
+		return domain ? `${domain}/${file.id}${ext}` : `/${file.id}${ext}`;
 	}
 
 	function getTimeLeft(file: FileRecord) {
@@ -155,7 +160,7 @@
 	<div class="gallery-grid">
 		{#each data.files as file (file.id)}
 			<div class="file-card">
-				<a href={getFileUrl(file.id)} target="_blank" class="card-link">
+				<a href={getFileUrl(file)} target="_blank" class="card-link">
 					<div class="preview">
 						{#if isImage(file)}
 							<img src="/{file.id}" alt={file.original_name} loading="lazy" />
@@ -195,7 +200,7 @@
 						title="Copy link"
 						onclick={(e) => {
 							e.preventDefault();
-							copyLink(file.id);
+							copyLink(file);
 						}}
 					>
 						{#if copiedId === file.id}

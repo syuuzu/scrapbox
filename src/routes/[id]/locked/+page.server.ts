@@ -3,7 +3,8 @@ import db from '$lib/server/db';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ params }) => {
-	const { id } = params;
+	const rawId = params.id;
+	const id = rawId.includes('.') ? rawId.substring(0, rawId.indexOf('.')) : rawId;
 
 	//look up the file
 	const stmt = db.prepare('SELECT * FROM files WHERE id = ?');

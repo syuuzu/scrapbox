@@ -119,7 +119,8 @@ export async function POST({ request }) {
 
 			//generate full url if site_domain is set
 			const domain = settingsMap['site_domain']?.replace(/\/$/, '') || '';
-			const shareUrl = domain ? `${domain}/${shortId}` : `/${shortId}`;
+			const ext = path.extname(originalName);
+			const shareUrl = domain ? `${domain}/${shortId}${ext}` : `/${shortId}${ext}`;
 
 			//return share link
 			return json({
