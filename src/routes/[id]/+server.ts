@@ -1,4 +1,4 @@
-import { error } from '@sveltejs/kit';
+import { error, redirect } from '@sveltejs/kit';
 import fs from 'fs';
 import path from 'path';
 import { Readable } from 'stream';
@@ -6,7 +6,7 @@ import { env } from '$env/dynamic/private';
 import db from '$lib/server/db';
 import mime from 'mime-types';
 
-export async function GET({ params }) {
+export async function GET({ params, url }) {
 	const { id } = params;
 
 	//look up the file
@@ -20,8 +20,12 @@ export async function GET({ params }) {
 		error(404, 'File not found');
 	}
 
+	if (fileRecord.is_encrypted && !url.searchParams.has('download')) {
+		throw redirect(302, `/${id}/locked`);
+	}
+
 	//find file
-	const uploadDir = env.UPLOAD_DIR || path.resolve(process.cwd(), 'local_uploads');
+	const uploadDir = env.UPLOAD_DIR || path.resolve(process.cwd(), 'uploads');
 	const filePath = path.join(uploadDir, fileRecord.disk_name);
 
 	if (!fs.existsSync(filePath)) {

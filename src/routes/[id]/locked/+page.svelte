@@ -30,7 +30,7 @@
 		loading = true;
 
 		try {
-			const response = await fetch(`/${data.id}/raw`);
+			const response = await fetch(`/${data.id}?download=true`);
 			if (!response.ok) throw new Error('Failed to fetch file');
 
 			const buffer = await response.arrayBuffer();

@@ -15,9 +15,9 @@ export const load: PageServerLoad = async ({ params }) => {
 		error(404, 'File not found');
 	}
 
-	//if not encrypted goto raw
+	//if not encrypted goto file directly
 	if (!fileRecord.is_encrypted) {
-		throw redirect(302, `/${id}/raw`);
+		throw redirect(302, `/${id}`);
 	}
 
 	return {
