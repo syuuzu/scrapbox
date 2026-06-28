@@ -55,7 +55,6 @@ db.exec(`
 	)
 `);
 
-//default is 50MB, forever upload time, all file types
 const defaultSettings = [
 	{ key: 'retention_policy', value: '0' },
 	{ key: 'max_upload_size', value: '52428800' },

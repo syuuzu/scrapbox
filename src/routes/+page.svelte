@@ -547,7 +547,7 @@
 
 	.settings-link {
 		color: var(--text-muted);
-		transition: all 0.2s;
+		transition: color 0.2s, transform 0.2s;
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -607,7 +607,7 @@
 		align-items: center;
 		justify-content: center;
 		cursor: pointer;
-		transition: all 0.2s;
+		transition: color 0.2s, transform 0.2s;
 		padding: 0;
 	}
 
@@ -873,7 +873,13 @@
 		color: var(--accent);
 		text-decoration: underline;
 		font-size: 1.2rem;
+		font-weight: bold;
 		word-break: break-all;
+		transition: opacity 0.2s;
+	}
+
+	.share-link:hover {
+		opacity: 0.8;
 	}
 
 	.site-footer {
