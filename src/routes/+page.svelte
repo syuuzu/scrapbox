@@ -478,7 +478,7 @@
 					</button>
 				</div>
 				<p class="encryption-hint">
-					<ShieldCheck size={14} /> files are encrypted in your browser before upload.
+					<ShieldCheck size={20} /> files are encrypted in browser before upload
 				</p>
 			</div>
 		{/if}
@@ -503,7 +503,13 @@
 				<p>{copied ? 'copied!' : 'upload complete!'}</p>
 				<!-- svelte-ignore a11y_click_events_have_key_events -->
 				<!-- svelte-ignore a11y_no_static_element_interactions -->
-				<span class="share-link" onclick={(e) => { e.stopPropagation(); window.open(finalUrl, '_blank'); }}>
+				<span
+					class="share-link"
+					onclick={(e) => {
+						e.stopPropagation();
+						window.open(finalUrl, '_blank');
+					}}
+				>
 					{finalUrl}
 				</span>
 			</button>
@@ -547,7 +553,9 @@
 
 	.settings-link {
 		color: var(--text-muted);
-		transition: color 0.2s, transform 0.2s;
+		transition:
+			color 0.2s,
+			transform 0.2s;
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -607,7 +615,9 @@
 		align-items: center;
 		justify-content: center;
 		cursor: pointer;
-		transition: color 0.2s, transform 0.2s;
+		transition:
+			color 0.2s,
+			transform 0.2s;
 		padding: 0;
 	}
 
@@ -658,15 +668,10 @@
 	}
 
 	.encryption-settings {
-		width: 100%;
 		display: flex;
 		flex-direction: column;
 		align-items: center;
 		gap: 1rem;
-		padding: 1.5rem;
-		background-color: rgba(255, 255, 255, 0.03);
-		border: 1px solid var(--border-color);
-		border-radius: 12px;
 	}
 
 	.encryption-toggle {
@@ -888,7 +893,6 @@
 		flex-direction: column;
 		align-items: center;
 		gap: 0.5rem;
-		padding: 2rem 0;
 		color: var(--text-muted);
 		font-size: 0.85rem;
 	}
