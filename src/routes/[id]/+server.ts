@@ -56,11 +56,14 @@ export async function GET({ params, url }) {
 	const nodeStream = fs.createReadStream(filePath);
 	const webStream = Readable.toWeb(nodeStream);
 
+	const asciiName = safeName.replace(/[^\x20-\x7E]/g, '');
+	const encodedName = encodeURIComponent(safeName);
+
 	return new Response(webStream as ReadableStream, {
 		headers: {
 			'Content-Type': mimeType,
 			'Content-Length': stat.size.toString(),
-			'Content-Disposition': `${displayAs}; filename="${safeName}"`,
+			'Content-Disposition': `${displayAs}; filename="${asciiName}"; filename*=UTF-8''${encodedName}`,
 			//tell apps they can cache this image for awhile
 			'Cache-Control': 'public, max-age=31536000'
 		}

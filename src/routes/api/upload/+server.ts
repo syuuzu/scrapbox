@@ -105,7 +105,7 @@ export async function POST({ request }) {
 			//generic filename on disk for encrypted files
 			const safeFilename = isEncrypted
 				? `${shortId}-encrypted`
-				: `${shortId}-${originalName.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+				: `${shortId}-${(originalName || 'unnamed').replace(/[^a-zA-Z0-9.\-]/g, '_')}`;
 
 			const finalFilePath = path.join(uploadDir, safeFilename);
 
@@ -115,7 +115,15 @@ export async function POST({ request }) {
 					INSERT INTO files (id, original_name, disk_name, size, is_encrypted, custom_retention, folder_id)
 					VALUES (?, ?, ?, ?, ?, ?, ?)
 				`);
-			stmt.run(shortId, originalName, safeFilename, totalSize, isEncrypted, finalRetention, folderId);
+			stmt.run(
+				shortId,
+				originalName,
+				safeFilename,
+				totalSize,
+				isEncrypted,
+				finalRetention,
+				folderId
+			);
 
 			//generate full url if site_domain is set
 			const domain = settingsMap['site_domain']?.replace(/\/$/, '') || '';
